@@ -26,7 +26,7 @@ import {
 // =========================================================================
 // CUSTOM GREEN SQUARE-FRAME CHECKMARK ICON (MATCHING USER'S EXACT REFERENCE)
 // =========================================================================
-export function CustomGreenCheckSquareIcon({ className = "w-8 h-8" }: { className?: string }) {
+export function CustomGreenCheckSquareIcon({ className = "w-10 h-10" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 100 100"
@@ -34,19 +34,20 @@ export function CustomGreenCheckSquareIcon({ className = "w-8 h-8" }: { classNam
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Rounded Square Frame with open top-right corner */}
+      {/* Smooth rounded open square frame */}
       <path
-        d="M65 24 H30 C20 24 14 30 14 40 V70 C14 80 20 86 30 86 H70 C80 86 86 80 86 70 V48"
+        d="M 64 25 H 30 C 19 25 13 31 13 42 V 68 C 13 79 19 85 30 85 H 70 C 81 85 87 79 87 68 V 44"
         stroke="currentColor"
-        strokeWidth="7"
+        strokeWidth="6.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Checkmark shooting through the top-right opening */}
+      {/* Sharp aerodynamic solid filled checkmark identical to user reference */}
       <path
-        d="M32 46 L48 68 L88 28"
+        d="M 34 44.5 L 48 64 L 76 27 L 48 52.5 Z"
+        fill="currentColor"
         stroke="currentColor"
-        strokeWidth="8.5"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -637,18 +638,12 @@ export function DualMerTables({
                 {/* RIGHT SIDE: Big Landed Hero Verified Badge with User's Exact Custom Green Check-Square Icon */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 lg:pl-8 lg:border-l border-slate-200 w-full lg:w-auto justify-end shrink-0 animate-in slide-in-from-left duration-700">
                   {/* Big Hero Verified Seal with User's Exact Custom Icon */}
-                  <div className="flex items-center gap-4 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/90 border border-emerald-200/90 px-6 py-4 rounded-3xl shadow-sm">
-                    <div className="relative">
-                      <div className="w-14 h-14 rounded-2xl bg-white border border-emerald-300/80 text-emerald-600 flex items-center justify-center shadow-md shadow-emerald-600/15">
-                        <CustomGreenCheckSquareIcon className="w-9 h-9 text-emerald-600" />
-                      </div>
-                      <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
-                      </span>
+                  <div className="flex items-center gap-4 bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/90 border border-emerald-200 px-6 py-4 rounded-3xl shadow-sm">
+                    <div className="w-16 h-16 rounded-2xl bg-white border-2 border-emerald-500/30 text-emerald-600 p-2.5 flex items-center justify-center shadow-md shadow-emerald-600/10">
+                      <CustomGreenCheckSquareIcon className="w-11 h-11 text-emerald-600" />
                     </div>
                     <div>
-                      <h5 className="font-bold text-sm sm:text-base text-emerald-950 tracking-tight">
+                      <h5 className="font-bold text-sm sm:text-base text-emerald-950 tracking-tight flex items-center gap-2">
                         100% Ground Truth Parity
                       </h5>
                       <p className="text-xs text-emerald-700 font-semibold mt-0.5">
