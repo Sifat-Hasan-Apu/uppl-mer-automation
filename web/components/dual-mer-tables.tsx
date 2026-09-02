@@ -248,22 +248,22 @@ export function DualMerTables({
       bgClass = "bg-teal-100 ring-2 ring-teal-600 ring-offset-1 scale-105 shadow-sm";
       textClass = "text-teal-950 font-bold";
     } else if (isScanned) {
-      if (item.isMatch) {
-        bgClass = isManual ? "bg-purple-50/80" : "bg-emerald-50/70";
-        borderClass = isManual ? "border border-purple-200/60" : "border border-emerald-200/60";
-        textClass = isManual ? "text-purple-950 font-semibold" : "text-emerald-950 font-semibold";
-      } else {
-        if (isManual) {
+      if (isManual) {
+        if (item.isMatch) {
+          bgClass = "bg-purple-50/80";
+          borderClass = "border border-purple-200/60";
+          textClass = "text-purple-950 font-semibold";
+        } else {
           // Manual Sheet: Error highlight with cross mark
           bgClass = "bg-rose-100 border-2 border-rose-500 shadow-xs ring-1 ring-rose-300";
           borderClass = "border-rose-500";
           textClass = "text-rose-950 font-bold";
-        } else {
-          // Software MER (Ground-Truth Base): Soft red alert border, NO cross mark
-          bgClass = "bg-rose-50 border-2 border-rose-300/90 shadow-2xs";
-          borderClass = "border-rose-300/90";
-          textClass = "text-rose-950 font-semibold";
         }
+      } else {
+        // Table 1: Software Ground-Truth Base (Always Green)
+        bgClass = "bg-emerald-50/90";
+        borderClass = "border border-emerald-300";
+        textClass = "text-emerald-950 font-semibold";
       }
     }
 
@@ -274,20 +274,24 @@ export function DualMerTables({
           !item.isMatch
             ? isManual
               ? `Manual Discrepancy: ${item.formattedManual} vs Ground-Truth: ${item.formattedCalculated} (Diff: ${item.delta})`
-              : `Ground-Truth Telemetry Base: ${item.formattedCalculated} (Manual Sheet differs: ${item.formattedManual})`
+              : `Ground-Truth Telemetry Base: ${item.formattedCalculated}`
             : undefined
         }
       >
         <span className="font-mono">{formattedText}</span>
         {isScanned && (
           <span className="inline-block ml-1.5 align-middle">
-            {item.isMatch ? (
+            {isManual ? (
+              item.isMatch ? (
+                <span className="text-emerald-700 font-bold text-[11px]">✓</span>
+              ) : (
+                <span className="text-rose-700 font-extrabold text-xs bg-rose-200/90 border border-rose-400 px-1 py-0.2 rounded">
+                  ✗
+                </span>
+              )
+            ) : (
               <span className="text-emerald-700 font-bold text-[11px]">✓</span>
-            ) : isManual ? (
-              <span className="text-rose-700 font-extrabold text-xs bg-rose-200/90 border border-rose-400 px-1 py-0.2 rounded">
-                ✗
-              </span>
-            ) : null}
+            )}
           </span>
         )}
       </div>
@@ -929,19 +933,29 @@ export function DualMerTables({
                 <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-bold">
                   <th className="p-2.5 text-center w-16">Cell</th>
                   <th className="p-2.5 w-48">Parameter</th>
-                  <th className="p-2.5 text-right w-36">Manual Input</th>
-                  <th className="p-2.5 text-right w-36">Ground Truth</th>
-                  <th className="p-2.5 text-right w-32">Delta</th>
+                  <th className="p-2.5 text-right w-36 text-purple-900 bg-purple-50/60">Manual Input</th>
+                  <th className="p-2.5 text-right w-40 text-emerald-900 bg-emerald-100/80 border-x border-emerald-200">Ground Truth (Software)</th>
+                  <th className="p-2.5 text-right w-28 text-rose-800">Delta</th>
                   <th className="p-2.5">Impact Analysis</th>
                 </tr>
               </thead>
               <tbody>
                 {crossCheckReport.mismatchedItems.map((item) => (
-                  <tr key={item.cellRef} className="border-b border-slate-200 bg-rose-50/40 font-mono">
+                  <tr key={item.cellRef} className="border-b border-slate-200 bg-rose-50/20 font-mono hover:bg-rose-50/40 transition-colors">
                     <td className="p-2.5 text-center font-bold text-rose-950">{item.cellRef}</td>
                     <td className="p-2.5 font-sans font-medium text-slate-800">{item.label}</td>
-                    <td className="p-2.5 text-right font-bold text-purple-900">{item.formattedManual}</td>
-                    <td className="p-2.5 text-right font-bold text-teal-900">{item.formattedCalculated}</td>
+                    <td className="p-2.5 text-right font-bold text-purple-950 bg-purple-50/30">
+                      <span className="inline-flex items-center gap-1 bg-purple-100/90 text-purple-950 border border-purple-300 font-bold px-2 py-0.5 rounded shadow-2xs">
+                        <span>{item.formattedManual}</span>
+                        <span className="text-rose-700 font-extrabold text-xs">✗</span>
+                      </span>
+                    </td>
+                    <td className="p-2.5 text-right font-bold text-emerald-950 bg-emerald-50/70 border-x border-emerald-200">
+                      <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-2 py-0.5 rounded shadow-2xs">
+                        <span>{item.formattedCalculated}</span>
+                        <span className="text-emerald-700 text-xs font-bold">✓</span>
+                      </span>
+                    </td>
                     <td className="p-2.5 text-right font-bold text-rose-700">
                       {item.delta && item.delta > 0 ? `+${item.delta.toFixed(2)}` : item.delta?.toFixed(2)}
                     </td>
