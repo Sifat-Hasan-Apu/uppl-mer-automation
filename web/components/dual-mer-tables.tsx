@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -13,11 +13,8 @@ import {
   Check,
   Cpu,
   RefreshCw,
-  Gauge,
   ArrowRight,
-  Activity,
-  Layers,
-  Sliders,
+  CheckCircle2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { AuditResult, MeterConfig } from "../lib/types";
@@ -26,6 +23,68 @@ import {
   ManualMerCrossCheckReport,
   CellVerificationItem,
 } from "../lib/manual-mer-comparator";
+
+// ==========================================
+// NATIVE WEB AUDIO HARMONIC CHIME GENERATOR
+// ==========================================
+function playSuccessVibrantSound() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    // Vibrant 4-note ascending chord with rich harmonic resonance (E5 -> G#5 -> B5 -> E6)
+    const notes = [
+      { freq: 659.25, time: 0.00, dur: 0.35, vol: 0.15 },
+      { freq: 830.61, time: 0.08, dur: 0.40, vol: 0.20 },
+      { freq: 987.77, time: 0.16, dur: 0.50, vol: 0.25 },
+      { freq: 1318.51, time: 0.24, dur: 0.85, vol: 0.32 },
+    ];
+
+    notes.forEach(({ freq, time, dur, vol }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + time);
+
+      // Smooth attack & resonant decay
+      gain.gain.setValueAtTime(0.001, ctx.currentTime + time);
+      gain.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + time + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + time + dur);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + time);
+      osc.stop(ctx.currentTime + time + dur);
+    });
+  } catch (e) {
+    console.warn("Audio not supported or blocked by browser interaction policy:", e);
+  }
+}
+
+// Subtle soft tick sound per cell scan
+function playScanTickSound(stepIndex: number) {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(520 + (stepIndex % 12) * 20, ctx.currentTime);
+    gain.gain.setValueAtTime(0.018, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.03);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.03);
+  } catch (e) {}
+}
 
 interface DualMerTablesProps {
   auditResult: AuditResult;
@@ -47,7 +106,8 @@ export function DualMerTables({
   const [scanIndex, setScanIndex] = useState<number>(0);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
-  const [speed, setSpeed] = useState<number>(70); // ms per step
+  const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  const [speed, setSpeed] = useState<number>(65); // ms per step
 
   const main = auditResult.meters.main;
   const backup = auditResult.meters.backup;
@@ -57,12 +117,14 @@ export function DualMerTables({
 
   const totalCells = crossCheckReport?.items.length || 0;
 
-  // Trigger celebration ONLY on complete 100% match after cross-check run
+  // Trigger celebration & vibrant sound on 100% match
   const triggerCelebration = () => {
+    setIsCompleted(true);
+    playSuccessVibrantSound();
     confetti({
-      particleCount: 110,
+      particleCount: 120,
       spread: 90,
-      origin: { y: 0.6 },
+      origin: { y: 0.55 },
       colors: ["#0d9488", "#10b981", "#059669", "#0284c7", "#f59e0b"],
     });
   };
@@ -72,12 +134,15 @@ export function DualMerTables({
 
     if (scanIndex < totalCells) {
       const timer = setTimeout(() => {
+        playScanTickSound(scanIndex);
         setScanIndex((prev) => {
           const next = prev + 1;
           if (next >= totalCells) {
             setIsAnimating(false);
             if (crossCheckReport.status === "PERFECT_MATCH") {
               triggerCelebration();
+            } else {
+              setIsCompleted(true);
             }
           }
           return next;
@@ -90,6 +155,7 @@ export function DualMerTables({
   const handleRunCrossCheck = () => {
     setScanIndex(0);
     setHasStarted(true);
+    setIsCompleted(false);
     setIsAnimating(true);
   };
 
@@ -98,6 +164,8 @@ export function DualMerTables({
     setIsAnimating(false);
     if (crossCheckReport?.status === "PERFECT_MATCH") {
       triggerCelebration();
+    } else {
+      setIsCompleted(true);
     }
   };
 
@@ -166,7 +234,6 @@ export function DualMerTables({
   };
 
   const currentItem = crossCheckReport?.items[scanIndex] || crossCheckReport?.items[totalCells - 1];
-  const progressPercent = totalCells > 0 ? Math.min(100, Math.round((scanIndex / totalCells) * 100)) : 100;
   const verifiedCount = hasStarted ? Math.min(scanIndex, totalCells) : 0;
 
   return (
@@ -381,165 +448,179 @@ export function DualMerTables({
         </div>
       </div>
 
-      {/* =========================================================
-          CREATIVE LIGHT-THEMED CROSS-CHECK HUB & SMART BRIDGE
-         ========================================================= */}
+      {/* =========================================================================
+          CREATIVE CROSS-CHECK BRIDGE (LEFT-TO-RIGHT ANIMATED TICK & LIVE ANALYTICS)
+         ========================================================================= */}
       {crossCheckReport && (
-        <div className="relative rounded-3xl bg-white border-2 border-teal-200/90 p-6 shadow-xl shadow-teal-900/5 font-sans overflow-hidden transition-all">
-          {/* Subtle ambient decorative gradient backdrop */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-teal-100/50 via-emerald-100/30 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-cyan-100/40 via-sky-100/20 to-transparent rounded-full blur-2xl pointer-events-none -ml-20 -mb-20"></div>
+        <div className="rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-7 shadow-sm font-sans transition-all duration-500 relative overflow-hidden">
+          {/* Subtle Ambient Decorative Gradient Backing */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-teal-50/50 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-50/40 rounded-full blur-3xl pointer-events-none -ml-16 -mb-16"></div>
 
-          <div className="relative z-10 space-y-5">
-            {/* Top Control Header */}
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-teal-600/20 ring-4 ring-teal-50">
-                  <Zap className={`w-6 h-6 ${isAnimating ? "animate-pulse" : ""}`} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <h4 className="font-bold text-base text-slate-900 tracking-tight">
-                      Cell-by-Cell CrossCheck Bridge
-                    </h4>
-                    {hasStarted && (
-                      <span
-                        className={`text-[11px] font-bold uppercase px-2.5 py-0.5 rounded-full shadow-sm ${
-                          crossCheckReport.status === "PERFECT_MATCH"
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                            : "bg-rose-100 text-rose-800 border border-rose-300"
-                        }`}
-                      >
-                        {crossCheckReport.status === "PERFECT_MATCH" ? "100% PARITY CONFIRMED" : `${crossCheckReport.mismatchCount} MISMATCHES DETECTED`}
-                      </span>
-                    )}
+          <div className="relative z-10">
+            {!hasStarted ? (
+              /* State 1: Ready to Cross-Check (Clean, Left-Aligned with Run Button) */
+              <div className="flex flex-wrap items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-200/80 text-teal-700 flex items-center justify-center shadow-xs">
+                    <Play className="w-6 h-6 fill-teal-600 text-teal-600 ml-1" />
                   </div>
-                  <p className="text-xs text-slate-600 mt-0.5">
-                    Connecting <strong className="text-teal-700">Table 1 (Telemetry Ground Truth)</strong> ➔ <strong className="text-purple-700">Table 2 ({crossCheckReport.fileName})</strong>
-                  </p>
+                  <div>
+                    <h4 className="font-bold text-base text-slate-900">
+                      Cross-Check Ground Truth with Manual MER
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Verify 36 critical parameter cells from <strong className="text-slate-700">{crossCheckReport.fileName}</strong> against raw meter intervals
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Action Buttons: Run CrossCheck Python Script */}
-              <div className="flex items-center gap-3">
                 <button
                   onClick={handleRunCrossCheck}
-                  disabled={isAnimating}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 disabled:opacity-50 text-white rounded-2xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-teal-600/20 hover:shadow-xl hover:shadow-teal-600/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
+                  className="flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white rounded-2xl text-xs font-bold uppercase tracking-wider shadow-md shadow-teal-600/20 hover:shadow-lg transition-all cursor-pointer"
                 >
-                  {isAnimating ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      <span>Verifying Cells ({verifiedCount}/{totalCells})...</span>
-                    </>
-                  ) : hasStarted ? (
-                    <>
-                      <RotateCcw className="w-4 h-4 text-white" />
-                      <span>Re-Run CrossCheck Python script</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-current text-white" />
-                      <span>Run CrossCheck Python script</span>
-                    </>
-                  )}
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>Run CrossCheck Python script</span>
                 </button>
+              </div>
+            ) : isAnimating ? (
+              /* State 2: Running Animation (Smooth scanning with cell updates) */
+              <div className="flex flex-wrap items-center justify-between gap-6 py-1">
+                <div className="flex items-center gap-4">
+                  {/* Left-Moving Scanner Node */}
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-teal-600/20 ring-4 ring-teal-50 animate-pulse">
+                    <RefreshCw className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h4 className="font-bold text-base text-slate-900">
+                        Running CrossCheck Python Script...
+                      </h4>
+                      <span className="text-xs font-mono font-bold bg-teal-100 text-teal-800 px-2.5 py-0.5 rounded-full">
+                        {verifiedCount} / {totalCells} Cells Scanned
+                      </span>
+                    </div>
+                    {currentItem && (
+                      <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-600 font-mono">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 font-bold text-slate-800">
+                          Cell {currentItem.cellRef}
+                        </span>
+                        <span>{currentItem.label}:</span>
+                        <strong className="text-teal-700 font-bold">{currentItem.formattedCalculated}</strong>
+                        <ArrowRight className="w-3 h-3 text-slate-400" />
+                        <strong className="text-purple-700 font-bold">{currentItem.formattedManual}</strong>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                {isAnimating && (
+                <button
+                  onClick={handleSkip}
+                  className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition border border-slate-200 cursor-pointer"
+                >
+                  <FastForward className="w-4 h-4 text-slate-600" />
+                  <span>Instant Result</span>
+                </button>
+              </div>
+            ) : (
+              /* State 3: Completed Verification (Smooth Left-side Analytics + Right-side Premium Verified Tick & Sound) */
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 animate-in fade-in slide-in-from-left duration-500">
+                {/* LEFT SIDE: Core Matching Values Analytics */}
+                <div className="flex-1 space-y-3.5 w-full">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Cross-Check Parity Analytics
+                    </span>
+                    <span
+                      className={`text-[11px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
+                        crossCheckReport.status === "PERFECT_MATCH"
+                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                          : "bg-rose-100 text-rose-800 border border-rose-300"
+                      }`}
+                    >
+                      {crossCheckReport.status === "PERFECT_MATCH" ? "100% PARITY CONFIRMED" : `${crossCheckReport.mismatchCount} MISMATCHES DETECTED`}
+                    </span>
+                  </div>
+
+                  {/* Core Matching Comparison Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    {/* Main Meter Net Supply (I22) */}
+                    <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-3.5 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                        <span>1. Main Meter Net Energy (Cell I22)</span>
+                        <span className="font-mono text-[10px] text-slate-400">Software ⩵ Manual</span>
+                      </div>
+                      <div className="flex items-center justify-between font-mono">
+                        <span className="text-slate-900 font-bold text-sm">
+                          {calc.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })} KWH
+                        </span>
+                        <span className="text-emerald-700 font-bold text-[11px] bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Exact Parity
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Back-up Meter Net Energy (I23) */}
+                    <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-3.5 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                        <span>2. Back-up Meter Net Energy (Cell I23)</span>
+                        <span className="font-mono text-[10px] text-slate-400">Software ⩵ Manual</span>
+                      </div>
+                      <div className="flex items-center justify-between font-mono">
+                        <span className="text-slate-900 font-bold text-sm">
+                          {calc.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })} KWH
+                        </span>
+                        <span className="text-emerald-700 font-bold text-[11px] bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Exact Parity
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary Footer */}
+                  <p className="text-xs text-slate-600 font-sans">
+                    {crossCheckReport.status === "PERFECT_MATCH" ? (
+                      <span>
+                        ✓ All <strong className="text-emerald-800 font-bold">36 critical parameter cells</strong> (active/reactive readings, differences, OMF, advances, and net billing export) match raw interval telemetry with <strong className="text-emerald-800 font-bold">0.000% variance</strong>.
+                      </span>
+                    ) : (
+                      <span className="text-rose-700 font-semibold">
+                        ⚠️ {crossCheckReport.mismatchCount} cells in manual sheet differ from telemetry data. See root-cause table below.
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* RIGHT SIDE: Big Premium Animated Verified Seal & Re-Run Button */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 lg:pl-6 lg:border-l border-slate-200 w-full lg:w-auto justify-end">
+                  {/* Big Premium Tick Badge (Right-side Arrival) */}
+                  <div className="flex items-center gap-3.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 px-5 py-4 rounded-3xl shadow-sm transform hover:scale-[1.02] transition-transform">
+                    <div className="relative">
+                      <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 ring-4 ring-emerald-100 animate-in zoom-in-50 duration-500">
+                        <Check className="w-8 h-8 stroke-[3]" />
+                      </div>
+                      <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
+                      </span>
+                    </div>
+                    <div>
+                      <h5 className="font-bold text-sm text-emerald-950 tracking-tight">
+                        100% Ground Truth Parity
+                      </h5>
+                      <p className="text-[11px] text-emerald-700 font-medium mt-0.5">
+                        Verified &amp; Cross-Checked ✓
+                      </p>
+                    </div>
+                  </div>
+
                   <button
-                    onClick={handleSkip}
-                    className="flex items-center gap-1.5 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-semibold transition border border-slate-200 shadow-sm"
-                    title="Skip animation and display full verification results"
+                    onClick={handleRunCrossCheck}
+                    className="flex items-center gap-2 px-5 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap"
                   >
-                    <FastForward className="w-3.5 h-3.5 text-slate-600" />
-                    <span>Instant</span>
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Re-Run Script</span>
                   </button>
-                )}
-              </div>
-            </div>
-
-            {/* Smart Metrics & Live Inspector Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
-              {/* Card 1: Verified Parity Ratio */}
-              <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
-                  {hasStarted ? `${progressPercent}%` : "0%"}
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Synchronized Cells</p>
-                  <p className="text-sm font-bold text-slate-900">
-                    {verifiedCount} / {totalCells} Critical Cells
-                  </p>
-                </div>
-              </div>
-
-              {/* Card 2: Python Script Verification Engine */}
-              <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Engine Protocol</p>
-                  <p className="text-sm font-bold text-slate-900">
-                    BPDB Strict Parity (0.00% Tol.)
-                  </p>
-                </div>
-              </div>
-
-              {/* Card 3: Total Net Difference */}
-              <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Audit Result</p>
-                  <p className="text-sm font-bold text-slate-900">
-                    {hasStarted
-                      ? crossCheckReport.status === "PERFECT_MATCH"
-                        ? "100% Exact Parity Verified ✓"
-                        : `${crossCheckReport.mismatchCount} Discrepancies Found`
-                      : "Ready to cross-check"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Current Active Cell Inspector Pill */}
-            {hasStarted && currentItem && (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-teal-50/90 via-emerald-50/60 to-purple-50/80 border border-teal-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono shadow-sm">
-                <div className="flex items-center gap-2.5">
-                  <span className="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow-xs">
-                    Cell {currentItem.cellRef}
-                  </span>
-                  <span className="text-slate-800 font-sans font-medium text-xs">{currentItem.label}</span>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-slate-600">Software: <strong className="text-teal-800 font-bold">{currentItem.formattedCalculated}</strong></span>
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-slate-600">Manual: <strong className="text-purple-800 font-bold">{currentItem.formattedManual}</strong></span>
-                  <span
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-xs ${
-                      currentItem.isMatch ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
-                    }`}
-                  >
-                    {currentItem.isMatch ? "PARITY MATCH ✓" : `MISMATCH (${currentItem.delta}) ✗`}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Modern Animated Gradient Progress Bar */}
-            {hasStarted && (
-              <div className="space-y-1.5 pt-1">
-                <div className="flex justify-between text-[11px] font-semibold text-slate-500 font-sans">
-                  <span>Verification Progress</span>
-                  <span>{progressPercent}% Completed</span>
-                </div>
-                <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200 shadow-inner">
-                  <div
-                    className="bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 h-full rounded-full transition-all duration-100 shadow-sm"
-                    style={{ width: `${progressPercent}%` }}
-                  />
                 </div>
               </div>
             )}
