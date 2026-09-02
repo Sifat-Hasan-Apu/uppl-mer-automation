@@ -29,6 +29,7 @@ import {
   X,
   Play,
   Code2,
+  Lock,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -67,8 +68,11 @@ import {
   ManualMerCrossCheckReport,
 } from "../lib/manual-mer-comparator";
 import { DualMerTables } from "../components/dual-mer-tables";
+import { AuthGate } from "../components/auth-gate";
 
 export default function UPPLMeterDashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
   const [config, setConfig] = useState<MeterConfig>(DEFAULT_CONFIG);
   const [month, setMonth] = useState<string>("");
 
@@ -96,6 +100,28 @@ export default function UPPLMeterDashboard() {
   // PWA Install Prompt
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      const sess = sessionStorage.getItem("uppl_auth");
+      const pers = localStorage.getItem("uppl_auth_persistent");
+      if (sess === "true" || pers === "true") {
+        setIsAuthenticated(true);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAuthChecking(false);
+    }
+  }, []);
+
+  const handleLock = () => {
+    try {
+      sessionStorage.removeItem("uppl_auth");
+      localStorage.removeItem("uppl_auth_persistent");
+    } catch (e) {}
+    setIsAuthenticated(false);
+  };
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -352,6 +378,21 @@ export default function UPPLMeterDashboard() {
     currentPage * pageSize
   );
 
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400 font-mono text-xs gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-teal-900/40 animate-pulse">
+          <Zap className="w-6 h-6 text-yellow-300 fill-yellow-300" />
+        </div>
+        <span>Verifying Security Access...</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AuthGate onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Top Header Navbar */}
@@ -381,11 +422,19 @@ export default function UPPLMeterDashboard() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={() => setShowConfigModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-300 transition shadow-sm cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-300 transition shadow-xs cursor-pointer"
             title="Configure OMF, Discrepancy Limits, Meter IDs"
           >
             <Sliders className="w-3.5 h-3.5 text-slate-500" />
             Settings
+          </button>
+          <button
+            onClick={handleLock}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 rounded-lg border border-slate-300 hover:border-rose-300 transition shadow-xs cursor-pointer"
+            title="Lock Session"
+          >
+            <Lock className="w-3.5 h-3.5 text-slate-500 hover:text-rose-600" />
+            Lock
           </button>
         </div>
       </header>
