@@ -26,7 +26,7 @@ import {
 // =========================================================================
 // CUSTOM GREEN SQUARE-FRAME CHECKMARK ICON (MATCHING USER'S EXACT REFERENCE)
 // =========================================================================
-export function CustomGreenCheckSquareIcon({ className = "w-10 h-10" }: { className?: string }) {
+export function CustomGreenCheckSquareIcon({ className = "w-16 h-16" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 100 100"
@@ -34,20 +34,20 @@ export function CustomGreenCheckSquareIcon({ className = "w-10 h-10" }: { classN
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Smooth rounded open square frame */}
+      {/* Smooth rounded open square frame filling canvas */}
       <path
-        d="M 64 25 H 30 C 19 25 13 31 13 42 V 68 C 13 79 19 85 30 85 H 70 C 81 85 87 79 87 68 V 44"
+        d="M 66 16 H 24 C 14 16 8 22 8 32 V 76 C 8 86 14 92 24 92 H 76 C 86 92 92 86 92 76 V 46"
         stroke="currentColor"
-        strokeWidth="6.5"
+        strokeWidth="7"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Sharp aerodynamic solid filled checkmark identical to user reference */}
+      {/* Bold aerodynamic solid filled checkmark shooting through top right */}
       <path
-        d="M 34 44.5 L 48 64 L 76 27 L 48 52.5 Z"
+        d="M 28 47 L 45 72 L 88 16 L 45 57 Z"
         fill="currentColor"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -637,16 +637,16 @@ export function DualMerTables({
 
                 {/* RIGHT SIDE: Big Landed Hero Verified Badge with User's Exact Custom Green Check-Square Icon */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 lg:pl-8 lg:border-l border-slate-200 w-full lg:w-auto justify-end shrink-0 animate-in slide-in-from-left duration-700">
-                  {/* Big Hero Verified Seal with User's Exact Custom Icon */}
-                  <div className="flex items-center gap-4 bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/90 border border-emerald-200 px-6 py-4 rounded-3xl shadow-sm">
-                    <div className="w-16 h-16 rounded-2xl bg-white border-2 border-emerald-500/30 text-emerald-600 p-2.5 flex items-center justify-center shadow-md shadow-emerald-600/10">
-                      <CustomGreenCheckSquareIcon className="w-11 h-11 text-emerald-600" />
+                  {/* Big Hero Verified Seal with Large Custom Green Icon */}
+                  <div className="flex items-center gap-5 bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/90 border border-emerald-300/80 px-7 py-5 rounded-3xl shadow-md shadow-emerald-600/5">
+                    <div className="w-20 h-20 rounded-2xl bg-emerald-50/70 border-2 border-emerald-400 text-emerald-600 p-2 flex items-center justify-center shadow-md shadow-emerald-600/10 shrink-0">
+                      <CustomGreenCheckSquareIcon className="w-16 h-16 text-emerald-600" />
                     </div>
                     <div>
-                      <h5 className="font-bold text-sm sm:text-base text-emerald-950 tracking-tight flex items-center gap-2">
+                      <h5 className="font-bold text-base sm:text-lg text-emerald-950 tracking-tight flex items-center gap-2">
                         100% Ground Truth Parity
                       </h5>
-                      <p className="text-xs text-emerald-700 font-semibold mt-0.5">
+                      <p className="text-xs text-emerald-700 font-semibold mt-1">
                         Verified &amp; Cross-Checked ✓
                       </p>
                     </div>
