@@ -1376,9 +1376,9 @@ export default function UPPLMeterDashboard() {
         <p>
           UPPL MER Automation &amp; Audit System • Built for M/S United Payra Power Limited (150 MW HFO Fired Power Plant)
         </p>
-        <p className="text-xs text-slate-600 mt-1 flex items-center justify-center gap-1.5 font-medium">
-          <Code2 className="w-4 h-4 text-teal-700" />
-          <span>Developer: <strong className="text-slate-900 font-semibold">Sifat Hasan Apu</strong></span>
+        <p className="text-xs mt-1.5 flex items-center justify-center gap-1.5 font-medium">
+          <Code2 className="w-4 h-4 text-blue-600" />
+          <strong className="text-blue-600 font-bold tracking-wide">Sifat Hasan Apu</strong>
         </p>
       </footer>
     </div>
