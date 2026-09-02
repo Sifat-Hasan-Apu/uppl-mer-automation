@@ -497,7 +497,7 @@ export function DualMerTables({
                 Net Energy Supplied to BPDB (as per Main Meter Reading) for the period ({fullStartDate}) to ({fullEndDate})
               </div>
               <div className="w-36 sm:w-44 text-right font-bold text-slate-950 font-mono text-sm">
-                {renderCellWithStatus("I21", calc.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
+                {renderCellWithStatus("I22", calc.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
               </div>
               <div className="w-14 sm:w-16 text-center font-bold text-slate-600">KWH</div>
             </div>
@@ -507,8 +507,9 @@ export function DualMerTables({
                 Net Energy Supplied to BPDB (as per Back-up Meter Reading) for the period ({fullStartDate}) to ({fullEndDate})
               </div>
               <div className="w-36 sm:w-44 text-right font-bold text-slate-950 font-mono text-sm">
-                {renderCellWithStatus("I22", calc.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
+                {renderCellWithStatus("I23", calc.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
               </div>
+              <div className="w-14 sm:w-16 text-center font-bold text-slate-600">KWH</div>
             </div>
           </div>
         </div>
@@ -628,7 +629,7 @@ export function DualMerTables({
                       >
                         <div className="flex items-center justify-between gap-2 mb-3">
                           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                            1. Main Meter Net Supply ({mainNetItem?.cellRef || "Cell I21"})
+                            1. Main Meter Net Supply ({mainNetItem?.cellRef || "Cell I22"})
                           </span>
                           {mainNetItem && !mainNetItem.isMatch ? (
                             <span
@@ -670,7 +671,7 @@ export function DualMerTables({
                       >
                         <div className="flex items-center justify-between gap-2 mb-3">
                           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                            2. Back-up Meter Net Supply ({backupNetItem?.cellRef || "Cell I22"})
+                            2. Back-up Meter Net Supply ({backupNetItem?.cellRef || "Cell I23"})
                           </span>
                           {backupNetItem && !backupNetItem.isMatch ? (
                             <span
@@ -961,7 +962,7 @@ export function DualMerTables({
                   Net Energy Supplied to BPDB (as per Main Meter Reading) for the period ({manualData.main.startDate}) to ({manualData.main.endDate})
                 </div>
                 <div className="w-36 sm:w-44 text-right font-bold text-purple-950 font-mono text-sm">
-                  {renderCellWithStatus("I21", manualData.main.netEnergySupplied, true)}
+                  {renderCellWithStatus("I22", manualData.main.netEnergySupplied, true)}
                 </div>
                 <div className="w-14 sm:w-16 text-center font-bold text-purple-800">KWH</div>
               </div>
@@ -971,7 +972,7 @@ export function DualMerTables({
                   Net Energy Supplied to BPDB (as per Back-up Meter Reading) for the period ({manualData.backup.startDate}) to ({manualData.backup.endDate})
                 </div>
                 <div className="w-36 sm:w-44 text-right font-bold text-purple-950 font-mono text-sm">
-                  {renderCellWithStatus("I22", manualData.backup.netEnergySupplied, true)}
+                  {renderCellWithStatus("I23", manualData.backup.netEnergySupplied, true)}
                 </div>
                 <div className="w-14 sm:w-16 text-center font-bold text-purple-800">KWH</div>
               </div>

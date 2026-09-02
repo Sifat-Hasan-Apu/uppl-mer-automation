@@ -273,8 +273,8 @@ export function parseAndCrossCheckManualMer(
     checkCell("N", 14, "Back-up Reactive Import Advance (kVARh)", "Back-up Meter", calc.backup.reactiveImportAdvance);
 
     // 6. Summary Net Energy Supplied Rows
-    let mainNetSupplyRow = 21;
-    let backupNetSupplyRow = 22;
+    let mainNetSupplyRow = 22;
+    let backupNetSupplyRow = 23;
     for (let r = 18; r <= 28; r++) {
       const v = String(getCellValue(`B${r}`) || "").toLowerCase();
       if (v.includes("net energy supplied") || v.includes("main meter")) {
