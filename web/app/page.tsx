@@ -809,36 +809,11 @@ export default function UPPLMeterDashboard() {
 
             <div className="flex items-center gap-2.5 flex-wrap">
               <button
-                onClick={handleDownloadXlsx}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl shadow-sm transition"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                Download Excel (.xlsx)
-              </button>
-
-              <button
                 onClick={handleDownloadPdf}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white rounded-xl shadow-sm transition"
+                className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold bg-teal-700 hover:bg-teal-800 text-white rounded-xl shadow-sm transition cursor-pointer"
               >
                 <FileText className="w-4 h-4" />
                 Download Print PDF (.pdf)
-              </button>
-
-              <button
-                onClick={handleDownloadJson}
-                className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl border border-slate-300 transition"
-              >
-                <FileCode className="w-4 h-4 text-slate-600" />
-                Audit Evidence (.json)
-              </button>
-
-              <button
-                onClick={() => window.print()}
-                className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl border border-slate-300 transition"
-                title="Print current document"
-              >
-                <Printer className="w-4 h-4 text-slate-600" />
-                Print
               </button>
             </div>
           </section>
