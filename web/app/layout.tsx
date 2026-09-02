@@ -4,10 +4,15 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "UPPL MER Automation & Audit System",
   description: "United Payra Power Limited 150MW Plant - Monthly Energy Reading Automation & Strict Meter Audit PWA",
-  manifest: "/manifest.json",
+  manifest: "./manifest.json",
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: [
+      { url: "./favicon.ico" },
+      { url: "./favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "./icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "./icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "./apple-touch-icon.png",
   },
   appleWebApp: {
     capable: true,
@@ -31,8 +36,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <link rel="manifest" href="./manifest.json" />
+        <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+        <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
