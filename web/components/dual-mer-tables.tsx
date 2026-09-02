@@ -14,7 +14,6 @@ import {
   Cpu,
   RefreshCw,
   ArrowRight,
-  CheckCircle2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { AuditResult, MeterConfig } from "../lib/types";
@@ -35,10 +34,10 @@ function playSuccessVibrantSound() {
 
     // Vibrant 4-note ascending chord with rich harmonic resonance (E5 -> G#5 -> B5 -> E6)
     const notes = [
-      { freq: 659.25, time: 0.00, dur: 0.35, vol: 0.15 },
-      { freq: 830.61, time: 0.08, dur: 0.40, vol: 0.20 },
-      { freq: 987.77, time: 0.16, dur: 0.50, vol: 0.25 },
-      { freq: 1318.51, time: 0.24, dur: 0.85, vol: 0.32 },
+      { freq: 659.25, time: 0.00, dur: 0.35, vol: 0.16 }, // E5
+      { freq: 830.61, time: 0.08, dur: 0.40, vol: 0.22 }, // G#5
+      { freq: 987.77, time: 0.16, dur: 0.50, vol: 0.26 }, // B5
+      { freq: 1318.51, time: 0.24, dur: 0.90, vol: 0.35 }, // E6
     ];
 
     notes.forEach(({ freq, time, dur, vol }) => {
@@ -60,7 +59,7 @@ function playSuccessVibrantSound() {
       osc.stop(ctx.currentTime + time + dur);
     });
   } catch (e) {
-    console.warn("Audio not supported or blocked by browser interaction policy:", e);
+    console.warn("Audio not supported or blocked by browser policy:", e);
   }
 }
 
@@ -75,7 +74,7 @@ function playScanTickSound(stepIndex: number) {
 
     osc.type = "triangle";
     osc.frequency.setValueAtTime(520 + (stepIndex % 12) * 20, ctx.currentTime);
-    gain.gain.setValueAtTime(0.018, ctx.currentTime);
+    gain.gain.setValueAtTime(0.015, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.03);
 
     osc.connect(gain);
@@ -85,6 +84,8 @@ function playScanTickSound(stepIndex: number) {
     osc.stop(ctx.currentTime + 0.03);
   } catch (e) {}
 }
+
+type CrossCheckPhase = "IDLE" | "SCANNING" | "GLIDING" | "COMPLETED";
 
 interface DualMerTablesProps {
   auditResult: AuditResult;
@@ -103,11 +104,10 @@ export function DualMerTables({
   fullStartDate,
   fullEndDate,
 }: DualMerTablesProps) {
+  const [phase, setPhase] = useState<CrossCheckPhase>("IDLE");
   const [scanIndex, setScanIndex] = useState<number>(0);
-  const [isAnimating, setIsAnimating] = useState<boolean>(false);
-  const [hasStarted, setHasStarted] = useState<boolean>(false);
-  const [isCompleted, setIsCompleted] = useState<boolean>(false);
-  const [speed, setSpeed] = useState<number>(65); // ms per step
+  const [glideProgress, setGlideProgress] = useState<boolean>(false);
+  const [speed, setSpeed] = useState<number>(60); // ms per step
 
   const main = auditResult.meters.main;
   const backup = auditResult.meters.backup;
@@ -117,66 +117,74 @@ export function DualMerTables({
 
   const totalCells = crossCheckReport?.items.length || 0;
 
-  // Trigger celebration & vibrant sound on 100% match
+  // Trigger celebration & vibrant sound on 100% match upon completing the glide
   const triggerCelebration = () => {
-    setIsCompleted(true);
     playSuccessVibrantSound();
     confetti({
-      particleCount: 120,
+      particleCount: 130,
       spread: 90,
       origin: { y: 0.55 },
       colors: ["#0d9488", "#10b981", "#059669", "#0284c7", "#f59e0b"],
     });
   };
 
+  // Phase 1: Cell-by-cell scanner
   useEffect(() => {
-    if (!isAnimating || !crossCheckReport || !hasStarted) return;
+    if (phase !== "SCANNING" || !crossCheckReport) return;
 
     if (scanIndex < totalCells) {
       const timer = setTimeout(() => {
         playScanTickSound(scanIndex);
-        setScanIndex((prev) => {
-          const next = prev + 1;
-          if (next >= totalCells) {
-            setIsAnimating(false);
-            if (crossCheckReport.status === "PERFECT_MATCH") {
-              triggerCelebration();
-            } else {
-              setIsCompleted(true);
-            }
-          }
-          return next;
-        });
+        setScanIndex((prev) => prev + 1);
       }, speed);
       return () => clearTimeout(timer);
+    } else {
+      // Cell scan complete! Transition into Phase 2: Slow Left-to-Right Glide
+      setPhase("GLIDING");
+      // Trigger CSS translate animation on next tick
+      requestAnimationFrame(() => {
+        setGlideProgress(true);
+      });
     }
-  }, [isAnimating, scanIndex, totalCells, speed, crossCheckReport, hasStarted]);
+  }, [phase, scanIndex, totalCells, speed, crossCheckReport]);
+
+  // Phase 2: Gliding from Left to Right over 1.4 seconds
+  useEffect(() => {
+    if (phase !== "GLIDING") return;
+
+    const glideTimer = setTimeout(() => {
+      setPhase("COMPLETED");
+      if (crossCheckReport?.status === "PERFECT_MATCH") {
+        triggerCelebration();
+      }
+    }, 1400); // 1.4s graceful gliding duration
+
+    return () => clearTimeout(glideTimer);
+  }, [phase, crossCheckReport]);
 
   const handleRunCrossCheck = () => {
     setScanIndex(0);
-    setHasStarted(true);
-    setIsCompleted(false);
-    setIsAnimating(true);
+    setGlideProgress(false);
+    setPhase("SCANNING");
   };
 
-  const handleSkip = () => {
+  const handleInstantComplete = () => {
     setScanIndex(totalCells);
-    setIsAnimating(false);
+    setGlideProgress(true);
+    setPhase("COMPLETED");
     if (crossCheckReport?.status === "PERFECT_MATCH") {
       triggerCelebration();
-    } else {
-      setIsCompleted(true);
     }
   };
 
   // Helper to get status of a cell coordinate
   const getCellStatus = (cellRef: string) => {
-    if (!crossCheckReport || !hasStarted) return { isScanned: false, isCurrent: false, item: null };
+    if (!crossCheckReport || phase === "IDLE") return { isScanned: false, isCurrent: false, item: null };
     const itemIdx = crossCheckReport.items.findIndex((i) => i.cellRef === cellRef);
     if (itemIdx === -1) return { isScanned: false, isCurrent: false, item: null };
 
-    const isCurrent = isAnimating && itemIdx === scanIndex;
-    const isScanned = itemIdx < scanIndex || scanIndex >= totalCells;
+    const isCurrent = phase === "SCANNING" && itemIdx === scanIndex;
+    const isScanned = itemIdx < scanIndex || phase === "GLIDING" || phase === "COMPLETED";
     const item = crossCheckReport.items[itemIdx];
 
     return { isScanned, isCurrent, item };
@@ -190,7 +198,7 @@ export function DualMerTables({
   ) => {
     const { isScanned, isCurrent, item } = getCellStatus(cellRef);
 
-    if (!crossCheckReport || !hasStarted || !item) {
+    if (!crossCheckReport || phase === "IDLE" || !item) {
       return (
         <span>
           {typeof displayValue === "number"
@@ -234,7 +242,7 @@ export function DualMerTables({
   };
 
   const currentItem = crossCheckReport?.items[scanIndex] || crossCheckReport?.items[totalCells - 1];
-  const verifiedCount = hasStarted ? Math.min(scanIndex, totalCells) : 0;
+  const verifiedCount = phase !== "IDLE" ? Math.min(scanIndex, totalCells) : 0;
 
   return (
     <div className="space-y-8 font-mono">
@@ -449,20 +457,20 @@ export function DualMerTables({
       </div>
 
       {/* =========================================================================
-          CREATIVE CROSS-CHECK BRIDGE (LEFT-TO-RIGHT ANIMATED TICK & LIVE ANALYTICS)
+          CINEMATIC CROSS-CHECK BRIDGE (SLOW LEFT-TO-RIGHT GLIDE & LIVE ANALYTICS)
          ========================================================================= */}
       {crossCheckReport && (
-        <div className="rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-7 shadow-sm font-sans transition-all duration-500 relative overflow-hidden">
-          {/* Subtle Ambient Decorative Gradient Backing */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-teal-50/50 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-50/40 rounded-full blur-3xl pointer-events-none -ml-16 -mb-16"></div>
+        <div className="rounded-3xl bg-white border border-slate-200 p-6 sm:p-7 shadow-sm font-sans transition-all duration-700 relative overflow-hidden min-h-[160px] flex flex-col justify-center">
+          {/* Subtle Ambient Decorative Gradient Glow */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-teal-50/60 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-50/50 rounded-full blur-3xl pointer-events-none -ml-16 -mb-16"></div>
 
-          <div className="relative z-10">
-            {!hasStarted ? (
-              /* State 1: Ready to Cross-Check (Clean, Left-Aligned with Run Button) */
+          <div className="relative z-10 w-full">
+            {/* PHASE 1: IDLE - Initial State */}
+            {phase === "IDLE" && (
               <div className="flex flex-wrap items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-200/80 text-teal-700 flex items-center justify-center shadow-xs">
+                  <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center shadow-xs">
                     <Play className="w-6 h-6 fill-teal-600 text-teal-600 ml-1" />
                   </div>
                   <div>
@@ -483,11 +491,13 @@ export function DualMerTables({
                   <span>Run CrossCheck Python script</span>
                 </button>
               </div>
-            ) : isAnimating ? (
-              /* State 2: Running Animation (Smooth scanning with cell updates) */
+            )}
+
+            {/* PHASE 2: SCANNING - Cell-by-cell radar scanning */}
+            {phase === "SCANNING" && (
               <div className="flex flex-wrap items-center justify-between gap-6 py-1">
                 <div className="flex items-center gap-4">
-                  {/* Left-Moving Scanner Node */}
+                  {/* Pulsing Left-side Scanner Orb */}
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-teal-600/20 ring-4 ring-teal-50 animate-pulse">
                     <RefreshCw className="w-6 h-6 animate-spin text-white" />
                   </div>
@@ -515,18 +525,51 @@ export function DualMerTables({
                 </div>
 
                 <button
-                  onClick={handleSkip}
+                  onClick={handleInstantComplete}
                   className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition border border-slate-200 cursor-pointer"
                 >
                   <FastForward className="w-4 h-4 text-slate-600" />
                   <span>Instant Result</span>
                 </button>
               </div>
-            ) : (
-              /* State 3: Completed Verification (Smooth Left-side Analytics + Right-side Premium Verified Tick & Sound) */
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 animate-in fade-in slide-in-from-left duration-500">
-                {/* LEFT SIDE: Core Matching Values Analytics */}
-                <div className="flex-1 space-y-3.5 w-full">
+            )}
+
+            {/* PHASE 3: GLIDING - Slow & Elegant Left-to-Right Motion */}
+            {phase === "GLIDING" && (
+              <div className="relative py-4 w-full overflow-hidden">
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-2 font-mono">
+                  <span>Cross-Checking All 36 Telemetry Parameters...</span>
+                  <span>Verifying Ground-Truth Parity</span>
+                </div>
+
+                {/* Ambient Glide Track */}
+                <div className="relative w-full h-16 bg-slate-50 border border-slate-200 rounded-2xl flex items-center px-3 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal-100/40 via-emerald-100/30 to-teal-100/40 animate-pulse"></div>
+
+                  {/* Slowly Gliding Orb (Left to Right over 1.4s) */}
+                  <div
+                    className="relative z-10 flex items-center gap-3 transition-transform duration-[1400ms] ease-in-out"
+                    style={{
+                      transform: glideProgress ? "translateX(calc(100% - 240px))" : "translateX(0px)",
+                    }}
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xl shadow-emerald-600/30 ring-4 ring-emerald-100 animate-pulse">
+                      <Check className="w-7 h-7 stroke-[3]" />
+                    </div>
+                    <div className="whitespace-nowrap">
+                      <p className="text-xs font-bold text-slate-900">Synchronizing Parity...</p>
+                      <p className="text-[10px] text-teal-700 font-mono font-medium">36 / 36 Cells Verified ✓</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PHASE 4: COMPLETED - Matching Analytics on Left + Landed Verified Seal on Right */}
+            {phase === "COMPLETED" && (
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 animate-in fade-in duration-700">
+                {/* LEFT SIDE: Core Matching Values Analytics (Smooth Fade-In Cascade) */}
+                <div className="flex-1 space-y-3.5 w-full animate-in fade-in slide-in-from-left duration-700">
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       Cross-Check Parity Analytics
@@ -545,7 +588,7 @@ export function DualMerTables({
                   {/* Core Matching Comparison Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     {/* Main Meter Net Supply (I22) */}
-                    <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-3.5 space-y-1.5">
+                    <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-3.5 space-y-1.5 shadow-xs">
                       <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
                         <span>1. Main Meter Net Energy (Cell I22)</span>
                         <span className="font-mono text-[10px] text-slate-400">Software ⩵ Manual</span>
@@ -561,7 +604,7 @@ export function DualMerTables({
                     </div>
 
                     {/* Back-up Meter Net Energy (I23) */}
-                    <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-3.5 space-y-1.5">
+                    <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-3.5 space-y-1.5 shadow-xs">
                       <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
                         <span>2. Back-up Meter Net Energy (Cell I23)</span>
                         <span className="font-mono text-[10px] text-slate-400">Software ⩵ Manual</span>
@@ -591,12 +634,12 @@ export function DualMerTables({
                   </p>
                 </div>
 
-                {/* RIGHT SIDE: Big Premium Animated Verified Seal & Re-Run Button */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 lg:pl-6 lg:border-l border-slate-200 w-full lg:w-auto justify-end">
-                  {/* Big Premium Tick Badge (Right-side Arrival) */}
+                {/* RIGHT SIDE: Landed Premium Verified Seal & Re-Run Button */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 lg:pl-6 lg:border-l border-slate-200 w-full lg:w-auto justify-end animate-in fade-in zoom-in-90 duration-700">
+                  {/* Big Premium Tick Badge (Landed on Right) */}
                   <div className="flex items-center gap-3.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 px-5 py-4 rounded-3xl shadow-sm transform hover:scale-[1.02] transition-transform">
                     <div className="relative">
-                      <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 ring-4 ring-emerald-100 animate-in zoom-in-50 duration-500">
+                      <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 ring-4 ring-emerald-100">
                         <Check className="w-8 h-8 stroke-[3]" />
                       </div>
                       <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
@@ -843,7 +886,7 @@ export function DualMerTables({
       {/* =========================================================
           DISCREPANCY ANALYTICS TABLE (IF MISMATCH FOUND)
          ========================================================= */}
-      {crossCheckReport && hasStarted && crossCheckReport.mismatchCount > 0 && (
+      {crossCheckReport && phase === "COMPLETED" && crossCheckReport.mismatchCount > 0 && (
         <div className="border border-rose-300 rounded-2xl bg-white shadow-sm overflow-hidden font-sans">
           <div className="bg-gradient-to-r from-rose-50 via-white to-rose-50 border-b border-rose-200 px-5 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
