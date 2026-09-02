@@ -380,8 +380,8 @@ export default function UPPLMeterDashboard() {
 
   if (isAuthChecking) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400 font-mono text-xs gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-teal-900/40 animate-pulse">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center text-slate-500 font-mono text-xs gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-700 via-teal-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-teal-700/20 animate-pulse">
           <Zap className="w-6 h-6 text-yellow-300 fill-yellow-300" />
         </div>
         <span>Verifying Security Access...</span>
