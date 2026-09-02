@@ -60,6 +60,11 @@ import {
 import { generateMerWorkbookBytes } from "../lib/mer-generator";
 import { downloadMerPdf } from "../lib/pdf-generator";
 import { SAMPLE_AUDIT_AUGUST_2026, SAMPLE_DAILY_CHART_DATA } from "../lib/sample-data";
+import {
+  parseAndCrossCheckManualMer,
+  ManualMerCrossCheckReport,
+} from "../lib/manual-mer-comparator";
+import { MerCrossCheckModal } from "../components/mer-crosscheck-modal";
 
 export default function UPPLMeterDashboard() {
   const [config, setConfig] = useState<MeterConfig>(DEFAULT_CONFIG);
@@ -68,12 +73,15 @@ export default function UPPLMeterDashboard() {
   // File states (Clean initial state for user upload)
   const [mainFile, setMainFile] = useState<File | null>(null);
   const [backupFile, setBackupFile] = useState<File | null>(null);
+  const [manualMerFile, setManualMerFile] = useState<File | null>(null);
   const [templateFile, setTemplateFile] = useState<File | null>(null);
 
-  // Processing & Audit state
+  // Processing, Cross-check & Audit state
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [crossCheckReport, setCrossCheckReport] = useState<ManualMerCrossCheckReport | null>(null);
+  const [showCrossCheckModal, setShowCrossCheckModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"mer" | "charts" | "audit" | "raw">("mer");
 
   // Filter & Search states
@@ -112,7 +120,8 @@ export default function UPPLMeterDashboard() {
   const processFiles = async (
     fileA: File | null = mainFile,
     fileB: File | null = backupFile,
-    selectedMonth: string = month
+    selectedMonth: string = month,
+    manualFile: File | null = manualMerFile
   ) => {
     if (!fileA || !fileB) {
       setErrorMessage("Please select both Main and Back-up meter Excel (.xlsx) files to run the audit.");
@@ -160,6 +169,15 @@ export default function UPPLMeterDashboard() {
       );
       setIntervalChartData(intervals);
 
+      // If manual MER file is present, immediately execute cell-by-cell cross-check!
+      const targetManual = manualFile || manualMerFile;
+      if (targetManual) {
+        const mBuf = await targetManual.arrayBuffer();
+        const report = parseAndCrossCheckManualMer(mBuf, targetManual.name, audit, config);
+        setCrossCheckReport(report);
+        setShowCrossCheckModal(true);
+      }
+
       // Confetti celebration on successful verification!
       confetti({
         particleCount: 80,
@@ -176,8 +194,20 @@ export default function UPPLMeterDashboard() {
     }
   };
 
+  const handleManualMerUpload = async (file: File) => {
+    setManualMerFile(file);
+    if (auditResult) {
+      const mBuf = await file.arrayBuffer();
+      const report = parseAndCrossCheckManualMer(mBuf, file.name, auditResult, config);
+      setCrossCheckReport(report);
+      setShowCrossCheckModal(true);
+    } else if (mainFile && backupFile) {
+      await processFiles(mainFile, backupFile, month, file);
+    }
+  };
+
   // Drag and drop helper
-  const handleDrop = async (e: React.DragEvent<HTMLDivElement>, target: "main" | "backup" | "template" | "auto") => {
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>, target: "main" | "backup" | "manual" | "template" | "auto") => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -186,30 +216,30 @@ export default function UPPLMeterDashboard() {
     );
     if (files.length === 0) return;
 
-    if (target === "template") {
-      setTemplateFile(files[0]);
+    if (target === "manual" || target === "template") {
+      await handleManualMerUpload(files[0]);
       return;
     }
 
     if (files.length >= 2) {
       setMainFile(files[0]);
       setBackupFile(files[1]);
-      await processFiles(files[0], files[1], month);
+      await processFiles(files[0], files[1], month, manualMerFile);
       return;
     }
 
     if (target === "main") {
       setMainFile(files[0]);
-      if (backupFile) await processFiles(files[0], backupFile, month);
+      if (backupFile) await processFiles(files[0], backupFile, month, manualMerFile);
     } else if (target === "backup") {
       setBackupFile(files[0]);
-      if (mainFile) await processFiles(mainFile, files[0], month);
+      if (mainFile) await processFiles(mainFile, files[0], month, manualMerFile);
     } else {
       if (!mainFile) {
         setMainFile(files[0]);
       } else {
         setBackupFile(files[0]);
-        await processFiles(mainFile, files[0], month);
+        await processFiles(mainFile, files[0], month, manualMerFile);
       }
     }
   };
@@ -231,6 +261,8 @@ export default function UPPLMeterDashboard() {
     setAuditResult(null);
     setMainFile(null);
     setBackupFile(null);
+    setManualMerFile(null);
+    setCrossCheckReport(null);
     setTemplateFile(null);
     setDailyChartData([]);
     setIntervalChartData([]);
@@ -336,6 +368,20 @@ export default function UPPLMeterDashboard() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 flex-wrap">
+          {crossCheckReport && (
+            <button
+              onClick={() => setShowCrossCheckModal(true)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border shadow-sm transition ${
+                crossCheckReport.status === "PERFECT_MATCH"
+                  ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300"
+                  : "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Cross-Check: {crossCheckReport.status === "PERFECT_MATCH" ? "100% MATCH" : `${crossCheckReport.mismatchCount} MISMATCH`}</span>
+            </button>
+          )}
+
           {auditResult && (
             <button
               onClick={handleReset}
@@ -564,57 +610,94 @@ export default function UPPLMeterDashboard() {
               )}
             </div>
 
-            {/* Box 3: MER Template (Optional) */}
+            {/* Box 3: Manual MER Cross-Check File */}
             <div
               onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => handleDrop(e, "template")}
+              onDrop={(e) => handleDrop(e, "manual")}
               className={`relative border-2 border-dashed rounded-2xl p-6 transition text-center flex flex-col items-center justify-center min-h-[170px] ${
-                templateFile
-                  ? "border-amber-600 bg-amber-50/50 shadow-sm"
-                  : "border-slate-300 hover:border-amber-600 bg-slate-50/70 hover:bg-slate-50"
+                manualMerFile
+                  ? crossCheckReport?.status === "PERFECT_MATCH"
+                    ? "border-emerald-600 bg-emerald-50/50 shadow-sm"
+                    : "border-amber-600 bg-amber-50/50 shadow-sm"
+                  : "border-slate-300 hover:border-purple-600 bg-slate-50/70 hover:bg-slate-50"
               }`}
             >
               <input
                 type="file"
                 accept=".xlsx,.xls"
-                id="template-file-input"
+                id="manual-file-input"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.[0]) {
-                    setTemplateFile(e.target.files[0]);
+                    handleManualMerUpload(e.target.files[0]);
                   }
                 }}
               />
-              <FileText
-                className={`w-10 h-10 mb-2.5 ${templateFile ? "text-amber-700" : "text-slate-400"}`}
+              <FileSpreadsheet
+                className={`w-10 h-10 mb-2.5 ${
+                  manualMerFile
+                    ? crossCheckReport?.status === "PERFECT_MATCH"
+                      ? "text-emerald-700"
+                      : "text-amber-700"
+                    : "text-purple-700"
+                }`}
               />
               <span className="font-bold text-sm text-slate-900 mb-1">
-                Approved MER Template (Optional)
+                Manual MER File (.xlsx)
               </span>
               <span className="text-[11px] text-slate-500 mb-3">
-                {templateFile ? templateFile.name : "BPDB Default Template is built-in"}
+                {manualMerFile ? (
+                  crossCheckReport?.status === "PERFECT_MATCH" ? (
+                    <span className="text-emerald-700 font-bold">100% Ground-Truth Parity Verified ✓</span>
+                  ) : crossCheckReport?.status === "DISCREPANCY_DETECTED" ? (
+                    <span className="text-amber-700 font-bold">{crossCheckReport.mismatchCount} Discrepancies Found ⚠️</span>
+                  ) : (
+                    manualMerFile.name
+                  )
+                ) : (
+                  "Upload manual sheet to cross-check cell-by-cell"
+                )}
               </span>
 
-              {templateFile ? (
-                <div className="flex items-center gap-2 bg-amber-100 border border-amber-300 px-3 py-1 rounded-lg text-xs text-amber-900 font-medium">
-                  <Check className="w-3.5 h-3.5 text-amber-700" />
-                  <span className="truncate max-w-[180px]">{templateFile.name}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTemplateFile(null);
-                    }}
-                    className="text-amber-700 hover:text-amber-950 ml-1"
+              {manualMerFile ? (
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold ${
+                      crossCheckReport?.status === "PERFECT_MATCH"
+                        ? "bg-emerald-100 border border-emerald-300 text-emerald-900"
+                        : "bg-amber-100 border border-amber-300 text-amber-900"
+                    }`}
                   >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                    <Check className="w-3.5 h-3.5" />
+                    <span className="truncate max-w-[130px]" title={manualMerFile.name}>
+                      {manualMerFile.name}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setManualMerFile(null);
+                        setCrossCheckReport(null);
+                      }}
+                      className="text-slate-600 hover:text-slate-950 ml-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  {crossCheckReport && (
+                    <button
+                      onClick={() => setShowCrossCheckModal(true)}
+                      className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow transition"
+                    >
+                      View Scanner
+                    </button>
+                  )}
                 </div>
               ) : (
                 <label
-                  htmlFor="template-file-input"
-                  className="cursor-pointer font-semibold text-xs bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl shadow-sm transition"
+                  htmlFor="manual-file-input"
+                  className="cursor-pointer font-semibold text-xs bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-xl shadow-sm transition"
                 >
-                  Browse Template (Optional)
+                  Browse Manual MER File
                 </label>
               )}
             </div>
@@ -940,6 +1023,68 @@ export default function UPPLMeterDashboard() {
             {/* Tab 1: Authentic BPDB MER Sheet Preview */}
             {activeTab === "mer" && (
               <div className="p-6 space-y-6 overflow-x-auto bg-white font-mono">
+                {/* Manual MER Cross-Check Status Ribbon */}
+                {crossCheckReport && (
+                  <div
+                    className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-4 shadow-sm font-sans ${
+                      crossCheckReport.status === "PERFECT_MATCH"
+                        ? "bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-emerald-300 text-emerald-950"
+                        : "bg-gradient-to-r from-amber-50 via-rose-50 to-amber-50 border-amber-300 text-amber-950"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${
+                          crossCheckReport.status === "PERFECT_MATCH"
+                            ? "bg-emerald-600 text-white shadow-emerald-600/20"
+                            : "bg-amber-600 text-white shadow-amber-600/20"
+                        }`}
+                      >
+                        {crossCheckReport.status === "PERFECT_MATCH" ? (
+                          <ShieldCheck className="w-6 h-6" />
+                        ) : (
+                          <AlertCircle className="w-6 h-6" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-sm sm:text-base">
+                            {crossCheckReport.status === "PERFECT_MATCH"
+                              ? "Manual MER Cross-Check: 100% Ground-Truth Parity Verified!"
+                              : `Manual MER Cross-Check: ${crossCheckReport.mismatchCount} Discrepancies Detected`}
+                          </h4>
+                          <span
+                            className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                              crossCheckReport.status === "PERFECT_MATCH"
+                                ? "bg-emerald-200/80 text-emerald-900 border border-emerald-300"
+                                : "bg-amber-200/80 text-amber-900 border border-amber-300"
+                            }`}
+                          >
+                            {crossCheckReport.status === "PERFECT_MATCH" ? "100% MATCH" : "DISCREPANCY"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-0.5">
+                          {crossCheckReport.status === "PERFECT_MATCH"
+                            ? `All ${crossCheckReport.totalChecked} critical cells in your manual spreadsheet (${crossCheckReport.fileName}) match the software ground-truth calculation.`
+                            : `Values in manual sheet (${crossCheckReport.fileName}) diverge from raw meter interval data. Open scanner to view root cause.`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setShowCrossCheckModal(true)}
+                      className={`px-4 py-2 text-xs font-bold rounded-xl text-white shadow transition flex items-center gap-1.5 ${
+                        crossCheckReport.status === "PERFECT_MATCH"
+                          ? "bg-emerald-700 hover:bg-emerald-800"
+                          : "bg-amber-700 hover:bg-amber-800"
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      View Live Laser Scanner &amp; Analytics →
+                    </button>
+                  </div>
+                )}
+
                 <div className="text-center space-y-1 pb-4 border-b border-slate-200">
                   <h3 className="text-base font-bold tracking-wide text-slate-900">
                     M/S.United Payra Power Limited
@@ -1495,6 +1640,15 @@ export default function UPPLMeterDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Manual MER Cross-Check Interactive Modal */}
+      {crossCheckReport && (
+        <MerCrossCheckModal
+          report={crossCheckReport}
+          isOpen={showCrossCheckModal}
+          onClose={() => setShowCrossCheckModal(false)}
+        />
       )}
 
       {/* Footer */}
