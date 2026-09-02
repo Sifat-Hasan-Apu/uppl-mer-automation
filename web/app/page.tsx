@@ -1024,34 +1024,6 @@ export default function UPPLMeterDashboard() {
                   fullStartDate={fullStartDate}
                   fullEndDate={fullEndDate}
                 />
-
-                {/* Official Signatures 4-column block */}
-                <div className="pt-8 pb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs border-t border-slate-200">
-                  <div className="border-t border-slate-900 pt-2 space-y-0.5">
-                    <p className="font-bold text-slate-900">Acting Plant Manager</p>
-                    <p className="text-slate-700">M/S United Payra Power Ltd.</p>
-                    <p className="text-slate-700">Kholishakhali, Patuakhali</p>
-                    <p className="text-slate-600">Member, Reading committee</p>
-                  </div>
-                  <div className="border-t border-slate-900 pt-2 space-y-0.5">
-                    <p className="font-bold text-slate-900">Executive Engineer</p>
-                    <p className="text-slate-700">Grid Maintenance Division.</p>
-                    <p className="text-slate-700">PGCB, Barishal</p>
-                    <p className="text-slate-600">Member, Reading committee</p>
-                  </div>
-                  <div className="border-t border-slate-900 pt-2 space-y-0.5">
-                    <p className="font-bold text-slate-900">Executive Engineer</p>
-                    <p className="text-slate-700">Opn. &amp; EMD</p>
-                    <p className="text-slate-700">Barishal Gas Turbine Power Plant, Barishal</p>
-                    <p className="text-slate-600">Member, Reading committee</p>
-                  </div>
-                  <div className="border-t border-slate-900 pt-2 space-y-0.5">
-                    <p className="font-bold text-slate-900">Executive Engineer</p>
-                    <p className="text-slate-700">Energy Auditing Unit Division</p>
-                    <p className="text-slate-700">BPDB, Barishal</p>
-                    <p className="text-slate-600">Convenor, Reading committee</p>
-                  </div>
-                </div>
               </div>
             )}
 

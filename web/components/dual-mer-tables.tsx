@@ -198,19 +198,7 @@ export function DualMerTables({
 
         {/* Table 1 Sheet Content */}
         <div className="p-5 overflow-x-auto">
-          <div className="text-center space-y-1 pb-4 border-b border-slate-200">
-            <h3 className="text-base font-bold tracking-wide text-slate-900">
-              M/S.United Payra Power Limited
-            </h3>
-            <p className="text-xs text-slate-700">150 MW HFO Fired Power Plant</p>
-            <p className="text-xs text-slate-700">Kholishakhali, Patuakhali</p>
-            <p className="text-xs text-slate-700">Energy Export to Grid at 132 KV</p>
-            <h4 className="text-xs font-bold text-slate-900 pt-1">
-              Month : {monthName} {bounds.year}
-            </h4>
-          </div>
-
-          <table className="w-full text-xs border-collapse border border-slate-400 text-slate-900 mt-4">
+          <table className="w-full text-xs border-collapse border border-slate-400 text-slate-900">
             <thead>
               <tr className="bg-slate-100 text-slate-900 font-bold">
                 <th rowSpan={2} className="border border-slate-400 p-2 text-center w-8">Sl</th>
@@ -503,19 +491,7 @@ export function DualMerTables({
 
           {/* Table 2 Sheet Content */}
           <div className="p-5 overflow-x-auto">
-            <div className="text-center space-y-1 pb-4 border-b border-purple-200">
-              <h3 className="text-base font-bold tracking-wide text-purple-950">
-                {manualData.plantName}
-              </h3>
-              <p className="text-xs text-slate-700">150 MW HFO Fired Power Plant</p>
-              <p className="text-xs text-slate-700">Kholishakhali, Patuakhali</p>
-              <p className="text-xs text-slate-700">Energy Export to Grid at 132 KV</p>
-              <h4 className="text-xs font-bold text-slate-900 pt-1">
-                {manualData.monthTitle}
-              </h4>
-            </div>
-
-            <table className="w-full text-xs border-collapse border border-slate-400 text-slate-900 mt-4">
+            <table className="w-full text-xs border-collapse border border-slate-400 text-slate-900">
               <thead>
                 <tr className="bg-purple-50 text-slate-900 font-bold">
                   <th rowSpan={2} className="border border-slate-400 p-2 text-center w-8">Sl</th>
