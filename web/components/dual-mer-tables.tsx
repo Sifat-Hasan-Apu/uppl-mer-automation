@@ -620,69 +620,85 @@ export function DualMerTables({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Main Meter Net Supply Card */}
                       <div
-                        className={`border rounded-2xl p-4 space-y-2 ${
+                        className={`rounded-2xl p-4 sm:p-5 border transition-all duration-200 flex flex-col justify-between ${
                           mainNetItem && !mainNetItem.isMatch
-                            ? "bg-rose-50/70 border-rose-300 shadow-2xs"
-                            : "bg-slate-50/90 border-slate-200"
+                            ? "bg-rose-50/70 border-rose-300 shadow-xs ring-1 ring-rose-300/60"
+                            : "bg-slate-50/90 border-slate-200/90 shadow-xs"
                         }`}
                       >
-                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                          1. Main Meter Net Supply ({mainNetItem?.cellRef || "Cell I21"})
-                        </p>
-                        <div className="flex items-center justify-between font-mono">
-                          <span className="text-base sm:text-lg font-bold text-slate-950">
-                            {calc.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })} KWH
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                            1. Main Meter Net Supply ({mainNetItem?.cellRef || "Cell I21"})
                           </span>
                           {mainNetItem && !mainNetItem.isMatch ? (
                             <span
-                              className="text-rose-700 font-bold text-xs bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-300 flex items-center gap-1.5"
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-800 bg-rose-100 border border-rose-300 px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 shadow-2xs"
                               title={`Manual: ${mainNetItem.formattedManual} vs Ground-Truth: ${mainNetItem.formattedCalculated}`}
                             >
-                              <span className="font-extrabold text-sm">✗</span> Mismatch (
-                              {mainNetItem.delta && mainNetItem.delta > 0
-                                ? `+${mainNetItem.delta.toFixed(2)}`
-                                : mainNetItem.delta?.toFixed(2)}
-                              )
+                              <span className="font-extrabold text-xs">✗</span>
+                              <span>
+                                Mismatch (
+                                {mainNetItem.delta && mainNetItem.delta > 0
+                                  ? `+${mainNetItem.delta.toFixed(2)}`
+                                  : mainNetItem.delta?.toFixed(2)}
+                                )
+                              </span>
                             </span>
                           ) : (
-                            <span className="text-emerald-700 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5">
-                              <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Exact Parity
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/80 border border-emerald-300 px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 shadow-2xs">
+                              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                              <span>Exact Parity</span>
                             </span>
                           )}
+                        </div>
+
+                        <div className="flex items-baseline gap-2 font-mono">
+                          <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-950">
+                            {calc.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-xs font-bold text-slate-500 font-sans uppercase">KWH</span>
                         </div>
                       </div>
 
                       {/* Back-up Meter Net Supply Card */}
                       <div
-                        className={`border rounded-2xl p-4 space-y-2 ${
+                        className={`rounded-2xl p-4 sm:p-5 border transition-all duration-200 flex flex-col justify-between ${
                           backupNetItem && !backupNetItem.isMatch
-                            ? "bg-rose-50/70 border-rose-300 shadow-2xs"
-                            : "bg-slate-50/90 border-slate-200"
+                            ? "bg-rose-50/70 border-rose-300 shadow-xs ring-1 ring-rose-300/60"
+                            : "bg-slate-50/90 border-slate-200/90 shadow-xs"
                         }`}
                       >
-                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                          2. Back-up Meter Net Supply ({backupNetItem?.cellRef || "Cell I22"})
-                        </p>
-                        <div className="flex items-center justify-between font-mono">
-                          <span className="text-base sm:text-lg font-bold text-slate-950">
-                            {calc.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })} KWH
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                            2. Back-up Meter Net Supply ({backupNetItem?.cellRef || "Cell I22"})
                           </span>
                           {backupNetItem && !backupNetItem.isMatch ? (
                             <span
-                              className="text-rose-700 font-bold text-xs bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-300 flex items-center gap-1.5"
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-800 bg-rose-100 border border-rose-300 px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 shadow-2xs"
                               title={`Manual: ${backupNetItem.formattedManual} vs Ground-Truth: ${backupNetItem.formattedCalculated}`}
                             >
-                              <span className="font-extrabold text-sm">✗</span> Mismatch (
-                              {backupNetItem.delta && backupNetItem.delta > 0
-                                ? `+${backupNetItem.delta.toFixed(2)}`
-                                : backupNetItem.delta?.toFixed(2)}
-                              )
+                              <span className="font-extrabold text-xs">✗</span>
+                              <span>
+                                Mismatch (
+                                {backupNetItem.delta && backupNetItem.delta > 0
+                                  ? `+${backupNetItem.delta.toFixed(2)}`
+                                  : backupNetItem.delta?.toFixed(2)}
+                                )
+                              </span>
                             </span>
                           ) : (
-                            <span className="text-emerald-700 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5">
-                              <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Exact Parity
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/80 border border-emerald-300 px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 shadow-2xs">
+                              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                              <span>Exact Parity</span>
                             </span>
                           )}
+                        </div>
+
+                        <div className="flex items-baseline gap-2 font-mono">
+                          <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-950">
+                            {calc.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-xs font-bold text-slate-500 font-sans uppercase">KWH</span>
                         </div>
                       </div>
                     </div>
