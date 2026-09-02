@@ -27,6 +27,7 @@ import {
   FolderOpen,
   X,
   Play,
+  Code2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -1375,8 +1376,9 @@ export default function UPPLMeterDashboard() {
         <p>
           UPPL MER Automation &amp; Audit System • Built for M/S United Payra Power Limited (150 MW HFO Fired Power Plant)
         </p>
-        <p className="text-[11px] text-slate-400 mt-0.5">
-          100% Client-Side Processing • Zero Server Upload • Offline Capable PWA
+        <p className="text-xs text-slate-600 mt-1 flex items-center justify-center gap-1.5 font-medium">
+          <Code2 className="w-4 h-4 text-teal-700" />
+          <span>Developer: <strong className="text-slate-900 font-semibold">Sifat Hasan Apu</strong></span>
         </p>
       </footer>
     </div>
