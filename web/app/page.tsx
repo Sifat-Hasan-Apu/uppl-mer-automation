@@ -245,6 +245,37 @@ export default function UPPLMeterDashboard() {
     setDailyChartData([]);
     setIntervalChartData([]);
     setErrorMessage(null);
+    setMonth("2026-08");
+  };
+
+  const handleRemoveMainFile = () => {
+    setMainFile(null);
+    setAuditResult(null);
+    setCrossCheckReport(null);
+    setDailyChartData([]);
+    setIntervalChartData([]);
+    if (!backupFile && !manualMerFile) {
+      setMonth("2026-08");
+    }
+  };
+
+  const handleRemoveBackupFile = () => {
+    setBackupFile(null);
+    setAuditResult(null);
+    setCrossCheckReport(null);
+    setDailyChartData([]);
+    setIntervalChartData([]);
+    if (!mainFile && !manualMerFile) {
+      setMonth("2026-08");
+    }
+  };
+
+  const handleRemoveManualFile = () => {
+    setManualMerFile(null);
+    setCrossCheckReport(null);
+    if (!mainFile && !backupFile) {
+      setMonth("2026-08");
+    }
   };
 
   // Export handlers
@@ -437,24 +468,38 @@ export default function UPPLMeterDashboard() {
               </p>
             </div>
 
-            {/* Month selector */}
-            <div className="flex items-center gap-2.5 bg-slate-50 px-4 py-2 rounded-xl border border-slate-300 shadow-inner">
-              <Calendar className="w-4 h-4 text-teal-700" />
-              <label htmlFor="month-select" className="text-xs text-slate-700 font-semibold">
-                Billing Month:
-              </label>
-              <input
-                id="month-select"
-                type="month"
-                value={month}
-                onChange={(e) => {
-                  setMonth(e.target.value);
-                  if (mainFile && backupFile) {
-                    processFiles(mainFile, backupFile, e.target.value);
-                  }
-                }}
-                className="bg-transparent text-sm font-bold text-teal-800 focus:outline-none cursor-pointer"
-              />
+            {/* Action buttons: Clear Data + Month selector */}
+            <div className="flex items-center gap-3">
+              {(mainFile || backupFile || manualMerFile || auditResult) && (
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-800 font-semibold bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 rounded-xl transition cursor-pointer shadow-2xs"
+                  title="Clear all uploaded files and reset month"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Clear Data</span>
+                </button>
+              )}
+
+              {/* Month selector */}
+              <div className="flex items-center gap-2.5 bg-slate-50 px-4 py-2 rounded-xl border border-slate-300 shadow-inner">
+                <Calendar className="w-4 h-4 text-teal-700" />
+                <label htmlFor="month-select" className="text-xs text-slate-700 font-semibold">
+                  Billing Month:
+                </label>
+                <input
+                  id="month-select"
+                  type="month"
+                  value={month}
+                  onChange={(e) => {
+                    setMonth(e.target.value);
+                    if (mainFile && backupFile) {
+                      processFiles(mainFile, backupFile, e.target.value);
+                    }
+                  }}
+                  className="bg-transparent text-sm font-bold text-teal-800 focus:outline-none cursor-pointer"
+                />
+              </div>
             </div>
           </div>
 
@@ -500,9 +545,9 @@ export default function UPPLMeterDashboard() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMainFile(null);
+                      handleRemoveMainFile();
                     }}
-                    className="text-teal-700 hover:text-teal-950 ml-1"
+                    className="text-teal-700 hover:text-teal-950 ml-1 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -557,9 +602,9 @@ export default function UPPLMeterDashboard() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setBackupFile(null);
+                      handleRemoveBackupFile();
                     }}
-                    className="text-cyan-700 hover:text-cyan-950 ml-1"
+                    className="text-cyan-700 hover:text-cyan-950 ml-1 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -639,10 +684,9 @@ export default function UPPLMeterDashboard() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setManualMerFile(null);
-                        setCrossCheckReport(null);
+                        handleRemoveManualFile();
                       }}
-                      className="text-slate-600 hover:text-slate-950 ml-1"
+                      className="text-slate-600 hover:text-slate-950 ml-1 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
