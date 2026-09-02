@@ -1,0 +1,23 @@
+{
+  "name": "UPPL MER Automation & Audit System",
+  "short_name": "UPPL MER",
+  "description": "United Payra Power Limited 150MW Plant Monthly Energy Reading Automation & Strict Meter Audit PWA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f766e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
