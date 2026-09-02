@@ -659,35 +659,6 @@ export default function UPPLMeterDashboard() {
             </div>
           </div>
 
-          {/* Action Trigger Button */}
-          <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
-            <div className="text-xs text-slate-500 flex items-center gap-1.5">
-              <Info className="w-4 h-4 text-teal-700 shrink-0" />
-              <span>
-                After selecting both files, click the button or drop files directly to execute instant verification.
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                disabled={!mainFile || !backupFile || isProcessing}
-                onClick={() => processFiles(mainFile, backupFile, month)}
-                className="flex items-center gap-2 px-6 py-2.5 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-teal-700 to-emerald-600 hover:from-teal-800 hover:to-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl shadow-md transition"
-              >
-                {isProcessing ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Running Strict Validation...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 fill-current" />
-                    RUN METER AUDIT &amp; GENERATE MER
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
         </section>
 
 
