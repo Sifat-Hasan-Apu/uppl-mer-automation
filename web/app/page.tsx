@@ -713,18 +713,7 @@ export default function UPPLMeterDashboard() {
 
 
 
-        {/* Empty State Prompt when no files have been processed yet */}
-        {!auditResult && !isProcessing && (
-          <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center space-y-3 shadow-sm">
-            <div className="w-14 h-14 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-teal-700">
-              <Table className="w-7 h-7" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900">Ready to Process Energy Meter Files</h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Please select or drag &amp; drop Main and Back-up meter files above to run strict verification and generate MER. Or click <strong>Load August 2026 Demo</strong> to test with verified sample data.
-            </p>
-          </div>
-        )}
+
 
         {/* Section 3: Executive Metric Cards (Visible when audit is ready) */}
         {auditResult && (
