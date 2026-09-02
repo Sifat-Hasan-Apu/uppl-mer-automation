@@ -18,10 +18,11 @@ import {
   ArrowDown,
   TrendingDown,
   TrendingUp,
+  RefreshCw,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { AuditResult, MeterConfig } from "../lib/types";
-import { monthBounds } from "../lib/meter-engine";
+import { monthBounds } from "./../lib/meter-engine";
 import {
   ManualMerCrossCheckReport,
   CellVerificationItem,
@@ -46,8 +47,8 @@ export function DualMerTables({
 }: DualMerTablesProps) {
   const [scanIndex, setScanIndex] = useState<number>(0);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
-  const [speed, setSpeed] = useState<number>(100); // ms per step
-  const [hasCompletedOnce, setHasCompletedOnce] = useState<boolean>(false);
+  const [hasStarted, setHasStarted] = useState<boolean>(false);
+  const [speed, setSpeed] = useState<number>(80); // ms per step
 
   const main = auditResult.meters.main;
   const backup = auditResult.meters.backup;
@@ -57,26 +58,18 @@ export function DualMerTables({
 
   const totalCells = crossCheckReport?.items.length || 0;
 
-  // Trigger celebration on complete 100% match
+  // Trigger celebration ONLY on complete 100% match after cross-check run
   const triggerCelebration = () => {
     confetti({
-      particleCount: 90,
+      particleCount: 100,
       spread: 80,
       origin: { y: 0.6 },
       colors: ["#10b981", "#059669", "#047857", "#34d399", "#fbbf24"],
     });
   };
 
-  // Start auto-animation when report is loaded
   useEffect(() => {
-    if (crossCheckReport && !hasCompletedOnce) {
-      setScanIndex(0);
-      setIsAnimating(true);
-    }
-  }, [crossCheckReport]);
-
-  useEffect(() => {
-    if (!isAnimating || !crossCheckReport) return;
+    if (!isAnimating || !crossCheckReport || !hasStarted) return;
 
     if (scanIndex < totalCells) {
       const timer = setTimeout(() => {
@@ -84,7 +77,6 @@ export function DualMerTables({
           const next = prev + 1;
           if (next >= totalCells) {
             setIsAnimating(false);
-            setHasCompletedOnce(true);
             if (crossCheckReport.status === "PERFECT_MATCH") {
               triggerCelebration();
             }
@@ -94,17 +86,17 @@ export function DualMerTables({
       }, speed);
       return () => clearTimeout(timer);
     }
-  }, [isAnimating, scanIndex, totalCells, speed, crossCheckReport]);
+  }, [isAnimating, scanIndex, totalCells, speed, crossCheckReport, hasStarted]);
 
-  const handleReplay = () => {
+  const handleRunCrossCheck = () => {
     setScanIndex(0);
+    setHasStarted(true);
     setIsAnimating(true);
   };
 
   const handleSkip = () => {
     setScanIndex(totalCells);
     setIsAnimating(false);
-    setHasCompletedOnce(true);
     if (crossCheckReport?.status === "PERFECT_MATCH") {
       triggerCelebration();
     }
@@ -112,7 +104,7 @@ export function DualMerTables({
 
   // Helper to get status of a cell coordinate
   const getCellStatus = (cellRef: string) => {
-    if (!crossCheckReport) return { isScanned: false, isCurrent: false, item: null };
+    if (!crossCheckReport || !hasStarted) return { isScanned: false, isCurrent: false, item: null };
     const itemIdx = crossCheckReport.items.findIndex((i) => i.cellRef === cellRef);
     if (itemIdx === -1) return { isScanned: false, isCurrent: false, item: null };
 
@@ -131,8 +123,14 @@ export function DualMerTables({
   ) => {
     const { isScanned, isCurrent, item } = getCellStatus(cellRef);
 
-    if (!crossCheckReport || !item) {
-      return <span>{typeof displayValue === "number" ? displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : displayValue}</span>;
+    if (!crossCheckReport || !hasStarted || !item) {
+      return (
+        <span>
+          {typeof displayValue === "number"
+            ? displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : displayValue}
+        </span>
+      );
     }
 
     let bgClass = "";
@@ -391,15 +389,17 @@ export function DualMerTables({
                   <h4 className="font-bold text-sm text-white">
                     Live Cell-by-Cell Cross-Check &amp; Parity Engine
                   </h4>
-                  <span
-                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                      crossCheckReport.status === "PERFECT_MATCH"
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                        : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                    }`}
-                  >
-                    {crossCheckReport.status === "PERFECT_MATCH" ? "100% PARITY MATCH" : `${crossCheckReport.mismatchCount} DISCREPANCY`}
-                  </span>
+                  {hasStarted && (
+                    <span
+                      className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                        crossCheckReport.status === "PERFECT_MATCH"
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                          : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                      }`}
+                    >
+                      {crossCheckReport.status === "PERFECT_MATCH" ? "100% PARITY MATCH" : `${crossCheckReport.mismatchCount} DISCREPANCY`}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Connecting Table 1 (Software) ➔ Table 2 (Manual Excel: <strong className="text-slate-200">{crossCheckReport.fileName}</strong>)
@@ -407,19 +407,35 @@ export function DualMerTables({
               </div>
             </div>
 
-            {/* Animation Controls */}
-            <div className="flex items-center gap-2">
+            {/* Animation Controls: Run CrossCheck Python script */}
+            <div className="flex items-center gap-2.5">
               <button
-                onClick={handleReplay}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition border border-slate-700"
+                onClick={handleRunCrossCheck}
+                disabled={isAnimating}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-teal-700/20 transition cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Re-Play Cross-Check
+                {isAnimating ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Running CrossCheck Python script...
+                  </>
+                ) : hasStarted ? (
+                  <>
+                    <RotateCcw className="w-4 h-4" />
+                    Re-Run CrossCheck Python script
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-current" />
+                    Run CrossCheck Python script
+                  </>
+                )}
               </button>
+
               {isAnimating && (
                 <button
                   onClick={handleSkip}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold transition shadow"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition border border-slate-700"
                 >
                   <FastForward className="w-3.5 h-3.5" />
                   Instant Complete
@@ -429,7 +445,7 @@ export function DualMerTables({
           </div>
 
           {/* Current Cell Status Bar */}
-          {currentItem && (
+          {hasStarted && currentItem && (
             <div className="mt-4 p-3 rounded-xl bg-slate-800/90 border border-slate-700 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
               <div className="flex items-center gap-2.5">
                 <span className="px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 font-bold border border-teal-500/30">
@@ -453,14 +469,16 @@ export function DualMerTables({
           )}
 
           {/* Progress bar */}
-          <div className="mt-3">
-            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
-              <div
-                className="bg-gradient-to-r from-teal-500 via-emerald-400 to-emerald-300 h-full rounded-full transition-all duration-100"
-                style={{ width: `${totalCells > 0 ? (scanIndex / totalCells) * 100 : 100}%` }}
-              />
+          {hasStarted && (
+            <div className="mt-3">
+              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
+                <div
+                  className="bg-gradient-to-r from-teal-500 via-emerald-400 to-emerald-300 h-full rounded-full transition-all duration-100"
+                  style={{ width: `${totalCells > 0 ? (scanIndex / totalCells) * 100 : 100}%` }}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -673,7 +691,7 @@ export function DualMerTables({
       {/* =========================================================
           DISCREPANCY ANALYTICS TABLE (IF MISMATCH FOUND)
          ========================================================= */}
-      {crossCheckReport && crossCheckReport.mismatchCount > 0 && (
+      {crossCheckReport && hasStarted && crossCheckReport.mismatchCount > 0 && (
         <div className="border border-rose-300 rounded-2xl bg-white shadow-sm overflow-hidden font-sans">
           <div className="bg-rose-900 text-white px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">

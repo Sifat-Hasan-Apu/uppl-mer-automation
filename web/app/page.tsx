@@ -176,14 +176,6 @@ export default function UPPLMeterDashboard() {
         const report = parseAndCrossCheckManualMer(mBuf, targetManual.name, audit, config);
         setCrossCheckReport(report);
       }
-
-      // Confetti celebration on successful verification!
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#0d9488", "#14b8a6", "#0284c7", "#f59e0b"],
-      });
     } catch (err: any) {
       console.error(err);
       setErrorMessage(err.message || "Meter audit and verification failed.");
@@ -241,12 +233,6 @@ export default function UPPLMeterDashboard() {
     setDailyChartData(SAMPLE_DAILY_CHART_DATA);
     setMonth("2026-08");
     setErrorMessage(null);
-    confetti({
-      particleCount: 50,
-      spread: 60,
-      origin: { y: 0.7 },
-      colors: ["#0d9488", "#0284c7"],
-    });
   };
 
   const handleReset = () => {
