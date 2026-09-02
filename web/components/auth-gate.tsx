@@ -84,7 +84,7 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
                   if (error) setError(null);
                 }}
                 autoFocus
-                placeholder="Enter passcode (150mw)..."
+                placeholder="Enter security passcode..."
                 className="w-full bg-slate-50 border border-slate-300 focus:bg-white focus:border-teal-600 focus:ring-4 focus:ring-teal-500/15 rounded-xl pl-10 pr-11 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition font-mono tracking-wider shadow-2xs"
               />
               <button
