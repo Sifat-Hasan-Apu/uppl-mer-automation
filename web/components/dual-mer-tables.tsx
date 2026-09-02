@@ -310,20 +310,20 @@ export function DualMerTables({
         </div>
 
         {/* Table 1 Sheet Content */}
-        <div className="p-5 overflow-x-auto">
+        <div className="p-4 sm:p-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-full text-xs border-collapse border border-slate-300 text-slate-900">
             <thead>
               <tr className="bg-slate-100/90 text-slate-900 font-bold">
-                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-10 text-slate-700">Sl</th>
-                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-40 text-slate-700">Meter Location</th>
-                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-28 text-slate-700">Date</th>
-                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-20 text-slate-700">Time</th>
+                <th rowSpan={2} className="border border-slate-300 p-2 text-center w-8 text-slate-700">Sl</th>
+                <th rowSpan={2} className="border border-slate-300 p-2 text-center w-32 text-slate-700">Meter Location</th>
+                <th rowSpan={2} className="border border-slate-300 p-2 text-center w-20 text-slate-700">Date</th>
+                <th rowSpan={2} className="border border-slate-300 p-2 text-center w-14 text-slate-700">Time</th>
                 <th colSpan={5} className="border border-slate-300 p-2 text-center font-bold bg-slate-100 text-slate-800">KWH</th>
                 <th colSpan={5} className="border border-slate-300 p-2 text-center font-bold bg-slate-100 text-slate-800">KVARh</th>
-                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-24 text-slate-700">Remarks</th>
+                <th rowSpan={2} className="border border-slate-300 p-2 text-center w-16 text-slate-700">Remarks</th>
               </tr>
               <tr className="bg-slate-50 text-slate-800 font-semibold text-[11px]">
-                <th className="border border-slate-300 p-1.5 text-center w-12 text-slate-500"></th>
+                <th className="border border-slate-300 p-1.5 text-center w-10 text-slate-500"></th>
                 <th className="border border-slate-300 p-1.5 text-right">Reading</th>
                 <th className="border border-slate-300 p-1.5 text-right">Difference</th>
                 <th className="border border-slate-300 p-1.5 text-center">OMF</th>
@@ -469,23 +469,23 @@ export function DualMerTables({
           <div className="mt-4 border border-slate-300 rounded-xl overflow-hidden text-xs shadow-2xs">
             <div className="flex items-center border-b border-slate-200 bg-slate-50/90 py-2.5 px-3">
               <div className="w-8 font-bold text-slate-700 text-center">1</div>
-              <div className="flex-1 font-medium text-slate-800">
+              <div className="flex-1 font-medium text-slate-800 pr-2">
                 Net Energy Supplied to BPDB (as per Main Meter Reading) for the period ({fullStartDate}) to ({fullEndDate})
               </div>
-              <div className="w-48 text-right font-bold text-slate-950 font-mono text-sm">
+              <div className="w-36 sm:w-44 text-right font-bold text-slate-950 font-mono text-sm">
                 {renderCellWithStatus("I22", calc.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
               </div>
-              <div className="w-16 text-center font-bold text-slate-600">KWH</div>
+              <div className="w-14 sm:w-16 text-center font-bold text-slate-600">KWH</div>
             </div>
             <div className="flex items-center bg-white py-2.5 px-3">
               <div className="w-8 font-bold text-slate-700 text-center">2</div>
-              <div className="flex-1 font-medium text-slate-800">
+              <div className="flex-1 font-medium text-slate-800 pr-2">
                 Net Energy Supplied to BPDB (as per Back-up Meter Reading) for the period ({fullStartDate}) to ({fullEndDate})
               </div>
-              <div className="w-48 text-right font-bold text-slate-950 font-mono text-sm">
+              <div className="w-36 sm:w-44 text-right font-bold text-slate-950 font-mono text-sm">
                 {renderCellWithStatus("I23", calc.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
               </div>
-              <div className="w-16 text-center font-bold text-slate-600">KWH</div>
+              <div className="w-14 sm:w-16 text-center font-bold text-slate-600">KWH</div>
             </div>
           </div>
         </div>
@@ -698,20 +698,20 @@ export function DualMerTables({
           </div>
 
           {/* Table 2 Sheet Content */}
-          <div className="p-5 overflow-x-auto">
+          <div className="p-4 sm:p-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <table className="w-full text-xs border-collapse border border-slate-300 text-slate-900">
               <thead>
                 <tr className="bg-purple-50/80 text-slate-900 font-bold">
-                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-10 text-slate-700">Sl</th>
-                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-40 text-slate-700">Meter Location</th>
-                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-28 text-slate-700">Date</th>
-                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-20 text-slate-700">Time</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2 text-center w-8 text-slate-700">Sl</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2 text-center w-32 text-slate-700">Meter Location</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2 text-center w-20 text-slate-700">Date</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2 text-center w-14 text-slate-700">Time</th>
                   <th colSpan={5} className="border border-slate-300 p-2 text-center font-bold bg-purple-50/80 text-slate-800">KWH</th>
                   <th colSpan={5} className="border border-slate-300 p-2 text-center font-bold bg-purple-50/80 text-slate-800">KVARh</th>
-                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-24 text-slate-700">Remarks</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2 text-center w-16 text-slate-700">Remarks</th>
                 </tr>
                 <tr className="bg-purple-50/40 text-slate-800 font-semibold text-[11px]">
-                  <th className="border border-slate-300 p-1.5 text-center w-12 text-slate-500"></th>
+                  <th className="border border-slate-300 p-1.5 text-center w-10 text-slate-500"></th>
                   <th className="border border-slate-300 p-1.5 text-right">Reading</th>
                   <th className="border border-slate-300 p-1.5 text-right">Difference</th>
                   <th className="border border-slate-300 p-1.5 text-center">OMF</th>
@@ -857,23 +857,23 @@ export function DualMerTables({
             <div className="mt-4 border border-purple-200/90 rounded-xl overflow-hidden text-xs shadow-2xs">
               <div className="flex items-center border-b border-purple-100 bg-purple-50/70 py-2.5 px-3">
                 <div className="w-8 font-bold text-purple-900 text-center">1</div>
-                <div className="flex-1 font-medium text-slate-800">
+                <div className="flex-1 font-medium text-slate-800 pr-2">
                   Net Energy Supplied to BPDB (as per Main Meter Reading) for the period ({manualData.main.startDate}) to ({manualData.main.endDate})
                 </div>
-                <div className="w-48 text-right font-bold text-purple-950 font-mono text-sm">
+                <div className="w-36 sm:w-44 text-right font-bold text-purple-950 font-mono text-sm">
                   {renderCellWithStatus("I22", manualData.main.netEnergySupplied, true)}
                 </div>
-                <div className="w-16 text-center font-bold text-purple-800">KWH</div>
+                <div className="w-14 sm:w-16 text-center font-bold text-purple-800">KWH</div>
               </div>
               <div className="flex items-center bg-white py-2.5 px-3">
                 <div className="w-8 font-bold text-purple-900 text-center">2</div>
-                <div className="flex-1 font-medium text-slate-800">
+                <div className="flex-1 font-medium text-slate-800 pr-2">
                   Net Energy Supplied to BPDB (as per Back-up Meter Reading) for the period ({manualData.backup.startDate}) to ({manualData.backup.endDate})
                 </div>
-                <div className="w-48 text-right font-bold text-purple-950 font-mono text-sm">
+                <div className="w-36 sm:w-44 text-right font-bold text-purple-950 font-mono text-sm">
                   {renderCellWithStatus("I23", manualData.backup.netEnergySupplied, true)}
                 </div>
-                <div className="w-16 text-center font-bold text-purple-800">KWH</div>
+                <div className="w-14 sm:w-16 text-center font-bold text-purple-800">KWH</div>
               </div>
             </div>
           </div>
