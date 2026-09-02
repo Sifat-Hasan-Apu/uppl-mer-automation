@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Upload,
   RefreshCw,
+  RotateCcw,
   Download,
   Printer,
   ShieldCheck,
