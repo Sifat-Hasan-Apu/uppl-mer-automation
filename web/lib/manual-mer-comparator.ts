@@ -16,6 +16,38 @@ export interface CellVerificationItem {
   impactDescription?: string;
 }
 
+export interface ManualMerSheetData {
+  plantName: string;
+  monthTitle: string;
+  main: {
+    meterId: string;
+    endDate: string;
+    endTime: string;
+    startDate: string;
+    startTime: string;
+    endReadings: { activeExport: string; activeImport: string; reactiveExport: string; reactiveImport: string };
+    startReadings: { activeExport: string; activeImport: string; reactiveExport: string; reactiveImport: string };
+    differences: { activeExport: string; activeImport: string; reactiveExport: string; reactiveImport: string };
+    advances: { activeExport: string; activeImport: string; reactiveExport: string; reactiveImport: string };
+    omf: string;
+    netEnergySupplied: string;
+  };
+  backup: {
+    meterId: string;
+    endDate: string;
+    endTime: string;
+    startDate: string;
+    startTime: string;
+    endReadings: { activeExport: string; activeImport: string; reactiveExport: string; reactiveImport: string };
+    startReadings: { activeExport: string; activeImport: string; reactiveExport: string; reactiveImport: string };
+    differences: { activeExport: string; activeImport: string; reactiveExport: string; reactiveImport: string };
+    advances: { activeExport: string; activeImport: string; reactiveExport: string; reactiveImport: string };
+    omf: string;
+    netEnergySupplied: string;
+  };
+  cellMap: Record<string, string>;
+}
+
 export interface ManualMerCrossCheckReport {
   fileName: string;
   sheetName: string;
@@ -27,6 +59,7 @@ export interface ManualMerCrossCheckReport {
   matchPercentage: number; // 0 to 100
   items: CellVerificationItem[];
   mismatchedItems: CellVerificationItem[];
+  manualSheetData?: ManualMerSheetData;
   summary: {
     mainNetSupplyMatch: boolean;
     backupNetSupplyMatch: boolean;
@@ -49,9 +82,16 @@ function normalizeNumber(val: any): number | null {
 }
 
 function formatValue(val: any, decimals: number = 2): string {
-  if (val === null || val === undefined) return "-";
+  if (val === null || val === undefined || val === "") return "-";
   if (typeof val === "number") {
     return val.toLocaleString("en-US", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  }
+  const parsed = normalizeNumber(val);
+  if (parsed !== null) {
+    return parsed.toLocaleString("en-US", {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     });
@@ -86,14 +126,11 @@ export function parseAndCrossCheckManualMer(
     };
 
     // Auto-detect base row offset (in case headers shift by a row or two)
-    // In standard BPDB MER: Row 10 is Main Meter End, Row 14 is Back-up Meter End, Row 22 is Main Net Supply
     let baseOffset = 0;
-    // Look for "Plant Control Room"
     for (let r = 5; r <= 15; r++) {
       for (const c of ["A", "B", "C"]) {
         const val = String(getCellValue(`${c}${r}`) || "").toLowerCase();
         if (val.includes("plant control") || val.includes("main meter")) {
-          // If "Plant Control Room" is on row 9, offset is 0.
           if (val.includes("plant control")) {
             baseOffset = r - 9;
           } else if (val.includes("main meter")) {
@@ -122,6 +159,7 @@ export function parseAndCrossCheckManualMer(
     const backupReacImpDiff = backup.readings.end.reactiveImport - backup.readings.start.reactiveImport;
 
     const items: CellVerificationItem[] = [];
+    const cellMap: Record<string, string> = {};
 
     // Helper to add numeric cell check
     const checkCell = (
@@ -138,6 +176,10 @@ export function parseAndCrossCheckManualMer(
       const isMatch = isNumericClose(manualNum, computedValue);
       const delta = manualNum !== null ? manualNum - computedValue : null;
 
+      const formattedManual = formatValue(rawManual);
+      const formattedCalculated = formatValue(computedValue);
+      cellMap[cellRef] = formattedManual;
+
       items.push({
         cellRef,
         row: row + baseOffset,
@@ -148,8 +190,8 @@ export function parseAndCrossCheckManualMer(
         calculatedValue: computedValue,
         isMatch,
         delta,
-        formattedManual: formatValue(manualNum),
-        formattedCalculated: formatValue(computedValue),
+        formattedManual,
+        formattedCalculated,
         impactDescription: isMatch
           ? "Exact parity with ground-truth raw meter telemetry."
           : impactInfo || `Discrepancy of ${delta && delta > 0 ? "+" : ""}${formatValue(delta)} between manual sheet and meter records.`,
@@ -204,8 +246,7 @@ export function parseAndCrossCheckManualMer(
     checkCell("N", 14, "Back-up Reactive Export Advance (kVARh)", "Back-up Meter", calc.backup.reactiveExportAdvance);
     checkCell("N", 15, "Back-up Reactive Import Advance (kVARh)", "Back-up Meter", calc.backup.reactiveImportAdvance);
 
-    // 6. Summary Net Energy Supplied Rows (Rows 22 & 23 in standard BPDB MER)
-    // Some manual templates put summary on row 21, 22, or 23; let's locate "Net Energy Supplied to BPDB"
+    // 6. Summary Net Energy Supplied Rows
     let mainNetSupplyRow = 22;
     let backupNetSupplyRow = 23;
     for (let r = 18; r <= 28; r++) {
@@ -219,6 +260,79 @@ export function parseAndCrossCheckManualMer(
 
     checkCell("I", mainNetSupplyRow, "Main Meter Net Energy Supplied (KWH)", "Summary", calc.main.activeNetSupply, "CRITICAL: Final Main Net Energy supplied to BPDB differs!");
     checkCell("I", backupNetSupplyRow, "Back-up Meter Net Energy Supplied (KWH)", "Summary", calc.backup.activeNetSupply, "CRITICAL: Final Back-up Net Energy supplied to BPDB differs!");
+
+    // Construct Manual Sheet Data for rendering Table 2
+    const manualSheetData: ManualMerSheetData = {
+      plantName: String(getCellValue("E2") || getCellValue("F2") || config.plant.name || "M/S.United Payra Power Limited"),
+      monthTitle: String(getCellValue("E6") || getCellValue("F6") || `Month : ${audit.month}`),
+      main: {
+        meterId: String(getCellValue(cellAt("B", 11)) || getCellValue(cellAt("B", 10)) || config.meters.main),
+        endDate: String(getCellValue(cellAt("C", 10)) || "31-Aug-26"),
+        endTime: String(getCellValue(cellAt("D", 10)) || "24.00"),
+        startDate: String(getCellValue(cellAt("C", 12)) || "01-Aug-26"),
+        startTime: String(getCellValue(cellAt("D", 12)) || "0:00"),
+        endReadings: {
+          activeExport: formatValue(getCellValue(cellAt("F", 10))),
+          activeImport: formatValue(getCellValue(cellAt("F", 11))),
+          reactiveExport: formatValue(getCellValue(cellAt("K", 10))),
+          reactiveImport: formatValue(getCellValue(cellAt("K", 11))),
+        },
+        startReadings: {
+          activeExport: formatValue(getCellValue(cellAt("F", 12))),
+          activeImport: formatValue(getCellValue(cellAt("F", 13))),
+          reactiveExport: formatValue(getCellValue(cellAt("K", 12))),
+          reactiveImport: formatValue(getCellValue(cellAt("K", 13))),
+        },
+        differences: {
+          activeExport: formatValue(getCellValue(cellAt("G", 10))),
+          activeImport: formatValue(getCellValue(cellAt("G", 11))),
+          reactiveExport: formatValue(getCellValue(cellAt("L", 10))),
+          reactiveImport: formatValue(getCellValue(cellAt("L", 11))),
+        },
+        advances: {
+          activeExport: formatValue(getCellValue(cellAt("I", 10))),
+          activeImport: formatValue(getCellValue(cellAt("I", 11))),
+          reactiveExport: formatValue(getCellValue(cellAt("N", 10))),
+          reactiveImport: formatValue(getCellValue(cellAt("N", 11))),
+        },
+        omf: formatValue(getCellValue(cellAt("H", 10))),
+        netEnergySupplied: formatValue(getCellValue(cellAt("I", mainNetSupplyRow))),
+      },
+      backup: {
+        meterId: String(getCellValue(cellAt("B", 15)) || getCellValue(cellAt("B", 14)) || config.meters.backup),
+        endDate: String(getCellValue(cellAt("C", 14)) || "31-Aug-26"),
+        endTime: String(getCellValue(cellAt("D", 14)) || "24.00"),
+        startDate: String(getCellValue(cellAt("C", 16)) || "01-Aug-26"),
+        startTime: String(getCellValue(cellAt("D", 16)) || "0:00"),
+        endReadings: {
+          activeExport: formatValue(getCellValue(cellAt("F", 14))),
+          activeImport: formatValue(getCellValue(cellAt("F", 15))),
+          reactiveExport: formatValue(getCellValue(cellAt("K", 14))),
+          reactiveImport: formatValue(getCellValue(cellAt("K", 15))),
+        },
+        startReadings: {
+          activeExport: formatValue(getCellValue(cellAt("F", 16))),
+          activeImport: formatValue(getCellValue(cellAt("F", 17))),
+          reactiveExport: formatValue(getCellValue(cellAt("K", 16))),
+          reactiveImport: formatValue(getCellValue(cellAt("K", 17))),
+        },
+        differences: {
+          activeExport: formatValue(getCellValue(cellAt("G", 14))),
+          activeImport: formatValue(getCellValue(cellAt("G", 15))),
+          reactiveExport: formatValue(getCellValue(cellAt("L", 14))),
+          reactiveImport: formatValue(getCellValue(cellAt("L", 15))),
+        },
+        advances: {
+          activeExport: formatValue(getCellValue(cellAt("I", 14))),
+          activeImport: formatValue(getCellValue(cellAt("I", 15))),
+          reactiveExport: formatValue(getCellValue(cellAt("N", 14))),
+          reactiveImport: formatValue(getCellValue(cellAt("N", 15))),
+        },
+        omf: formatValue(getCellValue(cellAt("H", 14))),
+        netEnergySupplied: formatValue(getCellValue(cellAt("I", backupNetSupplyRow))),
+      },
+      cellMap,
+    };
 
     const matchCount = items.filter((i) => i.isMatch).length;
     const mismatchCount = items.length - matchCount;
@@ -242,6 +356,7 @@ export function parseAndCrossCheckManualMer(
       matchPercentage,
       items,
       mismatchedItems,
+      manualSheetData,
       summary: {
         mainNetSupplyMatch: mainNetMatch,
         backupNetSupplyMatch: backupNetMatch,

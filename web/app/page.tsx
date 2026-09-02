@@ -65,6 +65,7 @@ import {
   ManualMerCrossCheckReport,
 } from "../lib/manual-mer-comparator";
 import { MerCrossCheckModal } from "../components/mer-crosscheck-modal";
+import { DualMerTables } from "../components/dual-mer-tables";
 
 export default function UPPLMeterDashboard() {
   const [config, setConfig] = useState<MeterConfig>(DEFAULT_CONFIG);
@@ -175,7 +176,6 @@ export default function UPPLMeterDashboard() {
         const mBuf = await targetManual.arrayBuffer();
         const report = parseAndCrossCheckManualMer(mBuf, targetManual.name, audit, config);
         setCrossCheckReport(report);
-        setShowCrossCheckModal(true);
       }
 
       // Confetti celebration on successful verification!
@@ -200,14 +200,11 @@ export default function UPPLMeterDashboard() {
       const mBuf = await file.arrayBuffer();
       const report = parseAndCrossCheckManualMer(mBuf, file.name, auditResult, config);
       setCrossCheckReport(report);
-      setShowCrossCheckModal(true);
-    } else if (mainFile && backupFile) {
-      await processFiles(mainFile, backupFile, month, file);
     }
   };
 
-  // Drag and drop helper
-  const handleDrop = async (e: React.DragEvent<HTMLDivElement>, target: "main" | "backup" | "manual" | "template" | "auto") => {
+  // Drag and drop helper (Stores files; does NOT run calculation until user clicks Run Meter Audit)
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, target: "main" | "backup" | "manual" | "template" | "auto") => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -217,29 +214,25 @@ export default function UPPLMeterDashboard() {
     if (files.length === 0) return;
 
     if (target === "manual" || target === "template") {
-      await handleManualMerUpload(files[0]);
+      handleManualMerUpload(files[0]);
       return;
     }
 
     if (files.length >= 2) {
       setMainFile(files[0]);
       setBackupFile(files[1]);
-      await processFiles(files[0], files[1], month, manualMerFile);
       return;
     }
 
     if (target === "main") {
       setMainFile(files[0]);
-      if (backupFile) await processFiles(files[0], backupFile, month, manualMerFile);
     } else if (target === "backup") {
       setBackupFile(files[0]);
-      if (mainFile) await processFiles(mainFile, files[0], month, manualMerFile);
     } else {
       if (!mainFile) {
         setMainFile(files[0]);
       } else {
         setBackupFile(files[0]);
-        await processFiles(mainFile, files[0], month, manualMerFile);
       }
     }
   };
@@ -1020,266 +1013,20 @@ export default function UPPLMeterDashboard() {
               </button>
             </div>
 
-            {/* Tab 1: Authentic BPDB MER Sheet Preview */}
+            {/* Tab 1: Authentic BPDB MER Sheet Preview (Dual Tables: Software & Manual) */}
             {activeTab === "mer" && (
-              <div className="p-6 space-y-6 overflow-x-auto bg-white font-mono">
-                {/* Manual MER Cross-Check Status Ribbon */}
-                {crossCheckReport && (
-                  <div
-                    className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-4 shadow-sm font-sans ${
-                      crossCheckReport.status === "PERFECT_MATCH"
-                        ? "bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-emerald-300 text-emerald-950"
-                        : "bg-gradient-to-r from-amber-50 via-rose-50 to-amber-50 border-amber-300 text-amber-950"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${
-                          crossCheckReport.status === "PERFECT_MATCH"
-                            ? "bg-emerald-600 text-white shadow-emerald-600/20"
-                            : "bg-amber-600 text-white shadow-amber-600/20"
-                        }`}
-                      >
-                        {crossCheckReport.status === "PERFECT_MATCH" ? (
-                          <ShieldCheck className="w-6 h-6" />
-                        ) : (
-                          <AlertCircle className="w-6 h-6" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-sm sm:text-base">
-                            {crossCheckReport.status === "PERFECT_MATCH"
-                              ? "Manual MER Cross-Check: 100% Ground-Truth Parity Verified!"
-                              : `Manual MER Cross-Check: ${crossCheckReport.mismatchCount} Discrepancies Detected`}
-                          </h4>
-                          <span
-                            className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                              crossCheckReport.status === "PERFECT_MATCH"
-                                ? "bg-emerald-200/80 text-emerald-900 border border-emerald-300"
-                                : "bg-amber-200/80 text-amber-900 border border-amber-300"
-                            }`}
-                          >
-                            {crossCheckReport.status === "PERFECT_MATCH" ? "100% MATCH" : "DISCREPANCY"}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-600 mt-0.5">
-                          {crossCheckReport.status === "PERFECT_MATCH"
-                            ? `All ${crossCheckReport.totalChecked} critical cells in your manual spreadsheet (${crossCheckReport.fileName}) match the software ground-truth calculation.`
-                            : `Values in manual sheet (${crossCheckReport.fileName}) diverge from raw meter interval data. Open scanner to view root cause.`}
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => setShowCrossCheckModal(true)}
-                      className={`px-4 py-2 text-xs font-bold rounded-xl text-white shadow transition flex items-center gap-1.5 ${
-                        crossCheckReport.status === "PERFECT_MATCH"
-                          ? "bg-emerald-700 hover:bg-emerald-800"
-                          : "bg-amber-700 hover:bg-amber-800"
-                      }`}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      View Live Laser Scanner &amp; Analytics →
-                    </button>
-                  </div>
-                )}
-
-                <div className="text-center space-y-1 pb-4 border-b border-slate-200">
-                  <h3 className="text-base font-bold tracking-wide text-slate-900">
-                    M/S.United Payra Power Limited
-                  </h3>
-                  <p className="text-xs text-slate-700">150 MW HFO Fired Power Plant</p>
-                  <p className="text-xs text-slate-700">Kholishakhali, Patuakhali</p>
-                  <p className="text-xs text-slate-700">Energy Export to Grid at 132 KV</p>
-                  <h4 className="text-xs font-bold text-slate-900 pt-1">
-                    Month : {monthName} {bounds.year}
-                  </h4>
-                </div>
-
-                {/* Form Table */}
-                <table className="w-full text-xs border-collapse border border-slate-400 text-slate-900">
-                  <thead>
-                    <tr className="bg-slate-100 text-slate-900 font-bold">
-                      <th rowSpan={2} className="border border-slate-400 p-2 text-center">Sl</th>
-                      <th rowSpan={2} className="border border-slate-400 p-2 text-center">Meter Location</th>
-                      <th rowSpan={2} className="border border-slate-400 p-2 text-center">Date</th>
-                      <th rowSpan={2} className="border border-slate-400 p-2 text-center">Time</th>
-                      <th colSpan={5} className="border border-slate-400 p-1.5 text-center font-bold">
-                        KWH
-                      </th>
-                      <th colSpan={5} className="border border-slate-400 p-1.5 text-center font-bold">
-                        KVARh
-                      </th>
-                      <th rowSpan={2} className="border border-slate-400 p-2 text-center">Remarks</th>
-                    </tr>
-                    <tr className="bg-slate-50 text-slate-800 font-semibold">
-                      <th className="border border-slate-400 p-1.5 text-center"></th>
-                      <th className="border border-slate-400 p-1.5 text-right">Reading</th>
-                      <th className="border border-slate-400 p-1.5 text-right">Difference</th>
-                      <th className="border border-slate-400 p-1.5 text-center">OMF</th>
-                      <th className="border border-slate-400 p-1.5 text-right font-bold">Total Advance</th>
-                      <th className="border border-slate-400 p-1.5 text-center"></th>
-                      <th className="border border-slate-400 p-1.5 text-right">Reading (KVARh)</th>
-                      <th className="border border-slate-400 p-1.5 text-right">Difference</th>
-                      <th className="border border-slate-400 p-1.5 text-center">OMF</th>
-                      <th className="border border-slate-400 p-1.5 text-right font-bold">Total Advance (KVARh)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* Plant Control Room Header Row */}
-                    <tr className="bg-slate-50/50">
-                      <td className="border border-slate-400 p-1.5"></td>
-                      <td colSpan={12} className="border border-slate-400 p-1.5 font-bold text-slate-900">
-                        Plant Control Room
-                      </td>
-                      <td className="border border-slate-400 p-1.5"></td>
-                    </tr>
-
-                    {/* Main Meter Rows */}
-                    <tr>
-                      <td rowSpan={4} className="border border-slate-400 p-2 font-bold text-center align-middle">
-                        1
-                      </td>
-                      <td rowSpan={4} className="border border-slate-400 p-2 font-bold align-middle">
-                        Main Meter<br />
-                        Meter ID:<br />
-                        <span className="font-semibold">{config.meters.main}</span>
-                      </td>
-                      <td rowSpan={2} className="border border-slate-400 p-1.5 text-center align-middle whitespace-nowrap font-medium">{fullEndDate}</td>
-                      <td rowSpan={2} className="border border-slate-400 p-1.5 text-center align-middle whitespace-nowrap font-medium">24.00</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium bg-purple-50">Exp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold bg-purple-50">{auditResult.meters.main.readings.end.activeExport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{(auditResult.meters.main.readings.end.activeExport - auditResult.meters.main.readings.start.activeExport).toFixed(2)}</td>
-                      <td rowSpan={4} className="border border-slate-400 p-1.5 text-center align-middle">{config.omf.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-bold">{auditResult.calculations.main.activeExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Exp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{auditResult.meters.main.readings.end.reactiveExport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{(auditResult.meters.main.readings.end.reactiveExport - auditResult.meters.main.readings.start.reactiveExport).toFixed(2)}</td>
-                      <td rowSpan={4} className="border border-slate-400 p-1.5 text-center align-middle">{config.omf.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-bold">{auditResult.calculations.main.reactiveExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td rowSpan={4} className="border border-slate-400 p-1.5 text-center"></td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium bg-purple-50">Imp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold bg-purple-50">{auditResult.meters.main.readings.end.activeImport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{(auditResult.meters.main.readings.end.activeImport - auditResult.meters.main.readings.start.activeImport).toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-bold">{auditResult.calculations.main.activeImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Imp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{auditResult.meters.main.readings.end.reactiveImport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{(auditResult.meters.main.readings.end.reactiveImport - auditResult.meters.main.readings.start.reactiveImport).toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-bold">{auditResult.calculations.main.reactiveImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                    <tr>
-                      <td rowSpan={2} className="border border-slate-400 p-1.5 text-center align-middle whitespace-nowrap font-medium bg-emerald-50">{fullStartDate}</td>
-                      <td rowSpan={2} className="border border-slate-400 p-1.5 text-center align-middle whitespace-nowrap font-medium bg-emerald-50">0:00</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium bg-emerald-50">Exp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right bg-emerald-50">{auditResult.meters.main.readings.start.activeExport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Exp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right">{auditResult.meters.main.readings.start.reactiveExport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium bg-emerald-50">Imp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right bg-emerald-50">{auditResult.meters.main.readings.start.activeImport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Imp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right">{auditResult.meters.main.readings.start.reactiveImport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                    </tr>
-
-                    {/* Back-up Meter Rows */}
-                    <tr>
-                      <td rowSpan={4} className="border border-slate-400 p-2 font-bold text-center align-middle">
-                        2
-                      </td>
-                      <td rowSpan={4} className="border border-slate-400 p-2 font-bold align-middle">
-                        Back-up Meter<br />
-                        Meter ID:<br />
-                        <span className="font-semibold">{config.meters.backup}</span>
-                      </td>
-                      <td rowSpan={2} className="border border-slate-400 p-1.5 text-center align-middle whitespace-nowrap font-medium">{fullEndDate}</td>
-                      <td rowSpan={2} className="border border-slate-400 p-1.5 text-center align-middle whitespace-nowrap font-medium">24.00</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Exp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{auditResult.meters.backup.readings.end.activeExport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{(auditResult.meters.backup.readings.end.activeExport - auditResult.meters.backup.readings.start.activeExport).toFixed(2)}</td>
-                      <td rowSpan={4} className="border border-slate-400 p-1.5 text-center align-middle">{config.omf.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-bold">{auditResult.calculations.backup.activeExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Exp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{auditResult.meters.backup.readings.end.reactiveExport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{(auditResult.meters.backup.readings.end.reactiveExport - auditResult.meters.backup.readings.start.reactiveExport).toFixed(2)}</td>
-                      <td rowSpan={4} className="border border-slate-400 p-1.5 text-center align-middle">{config.omf.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-bold">{auditResult.calculations.backup.reactiveExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td rowSpan={4} className="border border-slate-400 p-1.5 text-center"></td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Imp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{auditResult.meters.backup.readings.end.activeImport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{(auditResult.meters.backup.readings.end.activeImport - auditResult.meters.backup.readings.start.activeImport).toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-bold">{auditResult.calculations.backup.activeImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Imp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{auditResult.meters.backup.readings.end.reactiveImport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-semibold">{(auditResult.meters.backup.readings.end.reactiveImport - auditResult.meters.backup.readings.start.reactiveImport).toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-right font-bold">{auditResult.calculations.backup.reactiveImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                    <tr>
-                      <td rowSpan={2} className="border border-slate-400 p-1.5 text-center align-middle whitespace-nowrap font-medium bg-emerald-50">{fullStartDate}</td>
-                      <td rowSpan={2} className="border border-slate-400 p-1.5 text-center align-middle whitespace-nowrap font-medium bg-emerald-50">0:00</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Exp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right">{auditResult.meters.backup.readings.start.activeExport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Exp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right">{auditResult.meters.backup.readings.start.reactiveExport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Imp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right">{auditResult.meters.backup.readings.start.activeImport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center font-medium">Imp.</td>
-                      <td className="border border-slate-400 p-1.5 text-right">{auditResult.meters.backup.readings.start.reactiveImport.toFixed(2)}</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                      <td className="border border-slate-400 p-1.5 text-center">-</td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                {/* Net Energy Supplied Summary Section */}
-                <table className="w-full text-xs border-collapse border border-slate-400 text-slate-900 mt-4">
-                  <tbody>
-                    <tr>
-                      <td className="border border-slate-400 p-2 text-center w-8 font-bold">1</td>
-                      <td className="border border-slate-400 p-2">
-                        Net Energy Supplied to BPDB (as per Main Meter Reading) for the period ({periodStart}) to ({periodEnd})
-                      </td>
-                      <td className="border border-slate-400 p-2 text-right font-bold w-48">
-                        {auditResult.calculations.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="border border-slate-400 p-2 font-bold w-16 text-center">KWH</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-400 p-2 text-center w-8 font-bold">2</td>
-                      <td className="border border-slate-400 p-2">
-                        Net Energy Supplied to BPDB (as per Back-up Meter Reading) for the period ({periodStart}) to ({periodEnd})
-                      </td>
-                      <td className="border border-slate-400 p-2 text-right font-bold w-48">
-                        {auditResult.calculations.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="border border-slate-400 p-2 font-bold w-16 text-center">KWH</td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div className="p-6 space-y-6 bg-white font-mono">
+                <DualMerTables
+                  auditResult={auditResult}
+                  crossCheckReport={crossCheckReport}
+                  config={config}
+                  monthName={monthName}
+                  fullStartDate={fullStartDate}
+                  fullEndDate={fullEndDate}
+                />
 
                 {/* Official Signatures 4-column block */}
-                <div className="pt-12 pb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
+                <div className="pt-8 pb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs border-t border-slate-200">
                   <div className="border-t border-slate-900 pt-2 space-y-0.5">
                     <p className="font-bold text-slate-900">Acting Plant Manager</p>
                     <p className="text-slate-700">M/S United Payra Power Ltd.</p>
