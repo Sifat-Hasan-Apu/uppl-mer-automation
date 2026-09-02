@@ -70,6 +70,29 @@ export interface ManualMerCrossCheckReport {
   errorMessage?: string;
 }
 
+function formatExcelDate(val: any, fallback: string = ""): string {
+  if (val === null || val === undefined || val === "" || val === "-") return fallback;
+  if (typeof val === "number" && val > 20000 && val < 60000) {
+    const utcDays = Math.floor(val - 25569);
+    const utcValue = utcDays * 86400;
+    const dateInfo = new Date(utcValue * 1000);
+    const day = String(dateInfo.getUTCDate()).padStart(2, "0");
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = months[dateInfo.getUTCMonth()];
+    const year = String(dateInfo.getUTCFullYear()).slice(-2);
+    return `${day}-${month}-${year}`;
+  }
+  return String(val).trim();
+}
+
+function cleanMeterId(raw: any, fallback: string): string {
+  if (!raw) return fallback;
+  const str = String(raw).trim();
+  const match = str.match(/LGZ\d+/i);
+  if (match) return match[0].toUpperCase();
+  return str.replace(/Main\s*Meter\s*Meter\s*ID:?/gi, "").replace(/Back-up\s*Meter\s*Meter\s*ID:?/gi, "").trim() || fallback;
+}
+
 function normalizeNumber(val: any): number | null {
   if (val === null || val === undefined || val === "" || val === "-") return null;
   if (typeof val === "number") return val;
@@ -266,10 +289,10 @@ export function parseAndCrossCheckManualMer(
       plantName: String(getCellValue("E2") || getCellValue("F2") || config.plant.name || "M/S.United Payra Power Limited"),
       monthTitle: String(getCellValue("E6") || getCellValue("F6") || `Month : ${audit.month}`),
       main: {
-        meterId: String(getCellValue(cellAt("B", 11)) || getCellValue(cellAt("B", 10)) || config.meters.main),
-        endDate: String(getCellValue(cellAt("C", 10)) || "31-Aug-26"),
+        meterId: cleanMeterId(getCellValue(cellAt("B", 11)) || getCellValue(cellAt("B", 10)), config.meters.main),
+        endDate: formatExcelDate(getCellValue(cellAt("C", 10)), "31-Jul-26"),
         endTime: String(getCellValue(cellAt("D", 10)) || "24.00"),
-        startDate: String(getCellValue(cellAt("C", 12)) || "01-Aug-26"),
+        startDate: formatExcelDate(getCellValue(cellAt("C", 12)), "01-Jul-26"),
         startTime: String(getCellValue(cellAt("D", 12)) || "0:00"),
         endReadings: {
           activeExport: formatValue(getCellValue(cellAt("F", 10))),
@@ -299,10 +322,10 @@ export function parseAndCrossCheckManualMer(
         netEnergySupplied: formatValue(getCellValue(cellAt("I", mainNetSupplyRow))),
       },
       backup: {
-        meterId: String(getCellValue(cellAt("B", 15)) || getCellValue(cellAt("B", 14)) || config.meters.backup),
-        endDate: String(getCellValue(cellAt("C", 14)) || "31-Aug-26"),
+        meterId: cleanMeterId(getCellValue(cellAt("B", 15)) || getCellValue(cellAt("B", 14)), config.meters.backup),
+        endDate: formatExcelDate(getCellValue(cellAt("C", 14)), "31-Jul-26"),
         endTime: String(getCellValue(cellAt("D", 14)) || "24.00"),
-        startDate: String(getCellValue(cellAt("C", 16)) || "01-Aug-26"),
+        startDate: formatExcelDate(getCellValue(cellAt("C", 16)), "01-Jul-26"),
         startTime: String(getCellValue(cellAt("D", 16)) || "0:00"),
         endReadings: {
           activeExport: formatValue(getCellValue(cellAt("F", 14))),

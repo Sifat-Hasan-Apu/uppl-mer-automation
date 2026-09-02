@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -156,7 +156,6 @@ export function DualMerTables({
       }, speed);
       return () => clearTimeout(timer);
     } else {
-      // Completed! Switch state safely
       setPhase("COMPLETED");
       if (crossCheckReport.status === "PERFECT_MATCH") {
         triggerCelebration();
@@ -192,7 +191,7 @@ export function DualMerTables({
     return { isScanned, isCurrent, item };
   };
 
-  // Helper cell formatter
+  // Ultra-crisp cell formatter with premium subtle verified badge
   const renderCellWithStatus = (
     cellRef: string,
     displayValue: string | number,
@@ -200,14 +199,13 @@ export function DualMerTables({
   ) => {
     const { isScanned, isCurrent, item } = getCellStatus(cellRef);
 
+    const formattedText =
+      typeof displayValue === "number"
+        ? displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : displayValue;
+
     if (!crossCheckReport || phase === "IDLE" || !item) {
-      return (
-        <span>
-          {typeof displayValue === "number"
-            ? displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-            : displayValue}
-        </span>
-      );
+      return <span className="font-mono text-slate-800">{formattedText}</span>;
     }
 
     let bgClass = "";
@@ -215,27 +213,28 @@ export function DualMerTables({
     let textClass = "";
 
     if (isCurrent) {
-      bgClass = "bg-teal-100 ring-2 ring-teal-600 ring-offset-1 scale-105 transition-all shadow-sm";
+      bgClass = "bg-teal-100 ring-2 ring-teal-600 ring-offset-1 scale-105 shadow-sm";
       textClass = "text-teal-950 font-bold";
     } else if (isScanned) {
       if (item.isMatch) {
-        bgClass = isManual ? "bg-emerald-50/90" : "bg-teal-50/80";
-        textClass = "text-emerald-950 font-semibold";
+        bgClass = isManual ? "bg-purple-50/80" : "bg-emerald-50/70";
+        borderClass = isManual ? "border border-purple-200/60" : "border border-emerald-200/60";
+        textClass = isManual ? "text-purple-950 font-semibold" : "text-emerald-950 font-semibold";
       } else {
-        bgClass = "bg-rose-100/90 ring-1 ring-rose-400";
+        bgClass = "bg-rose-100/90 border border-rose-300";
         textClass = "text-rose-950 font-bold";
       }
     }
 
     return (
-      <div className={`relative px-1 py-0.5 rounded transition-all duration-150 inline-block w-full text-right ${bgClass} ${borderClass} ${textClass}`}>
-        <span className="font-mono">{displayValue}</span>
+      <div className={`relative px-2 py-0.5 rounded-md transition-all duration-150 inline-block w-full text-right ${bgClass} ${borderClass} ${textClass}`}>
+        <span className="font-mono">{formattedText}</span>
         {isScanned && (
-          <span className="inline-block ml-1">
+          <span className="inline-block ml-1.5 align-middle">
             {item.isMatch ? (
-              <span className="text-emerald-700 font-bold text-[10px]">✓</span>
+              <span className="text-emerald-700 font-bold text-[11px]">✓</span>
             ) : (
-              <span className="text-rose-700 font-bold text-[10px]" title={`Mismatch delta: ${item.delta}`}>✗</span>
+              <span className="text-rose-700 font-bold text-[11px]" title={`Mismatch delta: ${item.delta}`}>✗</span>
             )}
           </span>
         )}
@@ -247,32 +246,32 @@ export function DualMerTables({
   const verifiedCount = phase !== "IDLE" ? Math.min(scanIndex, totalCells) : 0;
 
   return (
-    <div className="space-y-8 font-mono">
+    <div className="space-y-8 font-sans">
       {/* =========================================================
           TABLE 1: SOFTWARE-GENERATED MER (GROUND TRUTH)
          ========================================================= */}
-      <div className="border border-slate-300 rounded-2xl bg-white shadow-sm overflow-hidden">
-        {/* Table 1 Clean Executive Header */}
-        <div className="bg-gradient-to-r from-teal-50/90 via-white to-slate-50 border-b border-teal-100/80 px-5 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20">
-              <Cpu className="w-4 h-4" />
+      <div className="border border-slate-300/80 rounded-2xl bg-white shadow-xs overflow-hidden">
+        {/* Table 1 Premium Executive Header */}
+        <div className="bg-gradient-to-r from-teal-50/90 via-white to-slate-50 border-b border-teal-100/80 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20">
+              <Cpu className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <h3 className="text-sm font-bold tracking-tight text-slate-900">
                   1. Software-Driven MER (Ground-Truth Telemetry)
                 </h3>
-                <span className="text-[10px] font-sans font-bold bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full border border-teal-200">
+                <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-2.5 py-0.5 rounded-full border border-teal-200">
                   TELEMETRY ENGINE
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Calculated directly from {auditResult.meters.main.uniqueTimestampCount} raw 15-minute interval records
               </p>
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-2 text-xs font-sans text-slate-600 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-700 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-2xs font-medium">
             <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
             <span>Ground Truth Active</span>
           </div>
@@ -280,190 +279,192 @@ export function DualMerTables({
 
         {/* Table 1 Sheet Content */}
         <div className="p-5 overflow-x-auto">
-          <table className="w-full text-xs border-collapse border border-slate-400 text-slate-900">
+          <table className="w-full text-xs border-collapse border border-slate-300 text-slate-900">
             <thead>
-              <tr className="bg-slate-100 text-slate-900 font-bold">
-                <th rowSpan={2} className="border border-slate-400 p-2 text-center w-8">Sl</th>
-                <th rowSpan={2} className="border border-slate-400 p-2 text-center w-36">Meter Location</th>
-                <th rowSpan={2} className="border border-slate-400 p-2 text-center w-24">Date</th>
-                <th rowSpan={2} className="border border-slate-400 p-2 text-center w-16">Time</th>
-                <th colSpan={5} className="border border-slate-400 p-1.5 text-center font-bold bg-slate-100">KWH</th>
-                <th colSpan={5} className="border border-slate-400 p-1.5 text-center font-bold bg-slate-100">KVARh</th>
-                <th rowSpan={2} className="border border-slate-400 p-2 text-center w-20">Remarks</th>
+              <tr className="bg-slate-100/90 text-slate-900 font-bold">
+                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-10 text-slate-700">Sl</th>
+                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-40 text-slate-700">Meter Location</th>
+                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-28 text-slate-700">Date</th>
+                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-20 text-slate-700">Time</th>
+                <th colSpan={5} className="border border-slate-300 p-2 text-center font-bold bg-slate-100 text-slate-800">KWH</th>
+                <th colSpan={5} className="border border-slate-300 p-2 text-center font-bold bg-slate-100 text-slate-800">KVARh</th>
+                <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-24 text-slate-700">Remarks</th>
               </tr>
               <tr className="bg-slate-50 text-slate-800 font-semibold text-[11px]">
-                <th className="border border-slate-400 p-1 text-center w-10"></th>
-                <th className="border border-slate-400 p-1 text-right">Reading</th>
-                <th className="border border-slate-400 p-1 text-right">Difference</th>
-                <th className="border border-slate-400 p-1 text-center">OMF</th>
-                <th className="border border-slate-400 p-1 text-right font-bold">Total Advance</th>
-                <th className="border border-slate-400 p-1 text-center w-10"></th>
-                <th className="border border-slate-400 p-1 text-right">Reading (KVARh)</th>
-                <th className="border border-slate-400 p-1 text-right">Difference</th>
-                <th className="border border-slate-400 p-1 text-center">OMF</th>
-                <th className="border border-slate-400 p-1 text-right font-bold">Total Advance (KVARh)</th>
+                <th className="border border-slate-300 p-1.5 text-center w-12 text-slate-500"></th>
+                <th className="border border-slate-300 p-1.5 text-right">Reading</th>
+                <th className="border border-slate-300 p-1.5 text-right">Difference</th>
+                <th className="border border-slate-300 p-1.5 text-center">OMF</th>
+                <th className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">Total Advance</th>
+                <th className="border border-slate-300 p-1.5 text-center w-12 text-slate-500"></th>
+                <th className="border border-slate-300 p-1.5 text-right">Reading (KVARh)</th>
+                <th className="border border-slate-300 p-1.5 text-right">Difference</th>
+                <th className="border border-slate-300 p-1.5 text-center">OMF</th>
+                <th className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">Total Advance (KVARh)</th>
               </tr>
             </thead>
             <tbody>
-              {/* Plant Control Room Header */}
+              {/* Plant Control Room Header Row */}
               <tr className="bg-slate-50/70">
-                <td className="border border-slate-400 p-1.5"></td>
-                <td colSpan={12} className="border border-slate-400 p-1.5 font-bold text-slate-900">
+                <td className="border border-slate-300 p-2"></td>
+                <td colSpan={12} className="border border-slate-300 p-2 font-bold text-slate-900 text-xs">
                   Plant Control Room
                 </td>
-                <td className="border border-slate-400 p-1.5"></td>
+                <td className="border border-slate-300 p-2"></td>
               </tr>
 
               {/* Main Meter Rows */}
               <tr>
-                <td rowSpan={4} className="border border-slate-400 p-2 font-bold text-center align-middle">1</td>
-                <td rowSpan={4} className="border border-slate-400 p-2 font-bold align-middle">
-                  Main Meter<br />
-                  Meter ID:<br />
-                  <span className="font-semibold">{config.meters.main}</span>
+                <td rowSpan={4} className="border border-slate-300 p-2 font-bold text-center align-middle">1</td>
+                <td rowSpan={4} className="border border-slate-300 p-2.5 align-middle">
+                  <div className="font-bold text-slate-900 text-xs">Main Meter</div>
+                  <div className="text-[11px] text-slate-500 mt-0.5">
+                    Meter ID: <span className="font-mono font-semibold text-teal-800">{config.meters.main}</span>
+                  </div>
                 </td>
-                <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{fullEndDate}</td>
-                <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">24.00</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F10", main.readings.end.activeExport)}</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("G10", (main.readings.end.activeExport - main.readings.start.activeExport).toFixed(2))}</td>
-                <td rowSpan={4} className="border border-slate-400 p-1 text-center align-middle font-bold">{renderCellWithStatus("H10", config.omf.toLocaleString("en-US"))}</td>
-                <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("I10", calc.main.activeExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K10", main.readings.end.reactiveExport)}</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("L10", (main.readings.end.reactiveExport - main.readings.start.reactiveExport).toFixed(2))}</td>
-                <td rowSpan={4} className="border border-slate-400 p-1 text-center align-middle font-bold">{renderCellWithStatus("M10", config.omf.toLocaleString("en-US"))}</td>
-                <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("N10", calc.main.reactiveExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
-                <td rowSpan={4} className="border border-slate-400 p-2 text-center align-middle text-slate-400">-</td>
+                <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{fullEndDate}</td>
+                <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">24.00</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Exp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F10", main.readings.end.activeExport)}</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("G10", (main.readings.end.activeExport - main.readings.start.activeExport).toFixed(2))}</td>
+                <td rowSpan={4} className="border border-slate-300 p-1.5 text-center align-middle font-bold text-slate-800">{renderCellWithStatus("H10", config.omf.toLocaleString("en-US"))}</td>
+                <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("I10", calc.main.activeExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Exp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K10", main.readings.end.reactiveExport)}</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("L10", (main.readings.end.reactiveExport - main.readings.start.reactiveExport).toFixed(2))}</td>
+                <td rowSpan={4} className="border border-slate-300 p-1.5 text-center align-middle font-bold text-slate-800">{renderCellWithStatus("M10", config.omf.toLocaleString("en-US"))}</td>
+                <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("N10", calc.main.reactiveExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
+                <td rowSpan={4} className="border border-slate-300 p-2 text-center align-middle text-slate-400 font-mono">-</td>
               </tr>
 
               <tr>
-                <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F11", main.readings.end.activeImport)}</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("G11", (main.readings.end.activeImport - main.readings.start.activeImport).toFixed(2))}</td>
-                <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("I11", calc.main.activeImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K11", main.readings.end.reactiveImport)}</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("L11", (main.readings.end.reactiveImport - main.readings.start.reactiveImport).toFixed(2))}</td>
-                <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("N11", calc.main.reactiveImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Imp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F11", main.readings.end.activeImport)}</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("G11", (main.readings.end.activeImport - main.readings.start.activeImport).toFixed(2))}</td>
+                <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("I11", calc.main.activeImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Imp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K11", main.readings.end.reactiveImport)}</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("L11", (main.readings.end.reactiveImport - main.readings.start.reactiveImport).toFixed(2))}</td>
+                <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("N11", calc.main.reactiveImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
               </tr>
 
-              <tr className="bg-emerald-50/40">
-                <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{fullStartDate}</td>
-                <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">0:00</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F12", main.readings.start.activeExport)}</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K12", main.readings.start.reactiveExport)}</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
+              <tr className="bg-slate-50/30">
+                <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{fullStartDate}</td>
+                <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">0:00</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Exp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F12", main.readings.start.activeExport)}</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Exp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K12", main.readings.start.reactiveExport)}</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
               </tr>
 
-              <tr className="bg-emerald-50/40">
-                <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F13", main.readings.start.activeImport)}</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K13", main.readings.start.reactiveImport)}</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
+              <tr className="bg-slate-50/30">
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Imp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F13", main.readings.start.activeImport)}</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Imp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K13", main.readings.start.reactiveImport)}</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
               </tr>
 
               {/* Back-up Meter Rows */}
               <tr>
-                <td rowSpan={4} className="border border-slate-400 p-2 font-bold text-center align-middle">2</td>
-                <td rowSpan={4} className="border border-slate-400 p-2 font-bold align-middle">
-                  Back-up Meter<br />
-                  Meter ID:<br />
-                  <span className="font-semibold">{config.meters.backup}</span>
+                <td rowSpan={4} className="border border-slate-300 p-2 font-bold text-center align-middle">2</td>
+                <td rowSpan={4} className="border border-slate-300 p-2.5 align-middle">
+                  <div className="font-bold text-slate-900 text-xs">Back-up Meter</div>
+                  <div className="text-[11px] text-slate-500 mt-0.5">
+                    Meter ID: <span className="font-mono font-semibold text-cyan-800">{config.meters.backup}</span>
+                  </div>
                 </td>
-                <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{fullEndDate}</td>
-                <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">24.00</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F14", backup.readings.end.activeExport)}</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("G14", (backup.readings.end.activeExport - backup.readings.start.activeExport).toFixed(2))}</td>
-                <td rowSpan={4} className="border border-slate-400 p-1 text-center align-middle font-bold">{renderCellWithStatus("H14", config.omf.toLocaleString("en-US"))}</td>
-                <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("I14", calc.backup.activeExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K14", backup.readings.end.reactiveExport)}</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("L14", (backup.readings.end.reactiveExport - backup.readings.start.reactiveExport).toFixed(2))}</td>
-                <td rowSpan={4} className="border border-slate-400 p-1 text-center align-middle font-bold">{renderCellWithStatus("M14", config.omf.toLocaleString("en-US"))}</td>
-                <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("N14", calc.backup.reactiveExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
-                <td rowSpan={4} className="border border-slate-400 p-2 text-center align-middle text-slate-400">-</td>
+                <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{fullEndDate}</td>
+                <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">24.00</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Exp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F14", backup.readings.end.activeExport)}</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("G14", (backup.readings.end.activeExport - backup.readings.start.activeExport).toFixed(2))}</td>
+                <td rowSpan={4} className="border border-slate-300 p-1.5 text-center align-middle font-bold text-slate-800">{renderCellWithStatus("H14", config.omf.toLocaleString("en-US"))}</td>
+                <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("I14", calc.backup.activeExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Exp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K14", backup.readings.end.reactiveExport)}</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("L14", (backup.readings.end.reactiveExport - backup.readings.start.reactiveExport).toFixed(2))}</td>
+                <td rowSpan={4} className="border border-slate-300 p-1.5 text-center align-middle font-bold text-slate-800">{renderCellWithStatus("M14", config.omf.toLocaleString("en-US"))}</td>
+                <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("N14", calc.backup.reactiveExportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
+                <td rowSpan={4} className="border border-slate-300 p-2 text-center align-middle text-slate-400 font-mono">-</td>
               </tr>
 
               <tr>
-                <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F15", backup.readings.end.activeImport)}</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("G15", (backup.readings.end.activeImport - backup.readings.start.activeImport).toFixed(2))}</td>
-                <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("I15", calc.backup.activeImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K15", backup.readings.end.reactiveImport)}</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("L15", (backup.readings.end.reactiveImport - backup.readings.start.reactiveImport).toFixed(2))}</td>
-                <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("N15", calc.backup.reactiveImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Imp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F15", backup.readings.end.activeImport)}</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("G15", (backup.readings.end.activeImport - backup.readings.start.activeImport).toFixed(2))}</td>
+                <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("I15", calc.backup.activeImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Imp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K15", backup.readings.end.reactiveImport)}</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("L15", (backup.readings.end.reactiveImport - backup.readings.start.reactiveImport).toFixed(2))}</td>
+                <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("N15", calc.backup.reactiveImportAdvance.toLocaleString("en-US", { minimumFractionDigits: 2 }))}</td>
               </tr>
 
-              <tr className="bg-emerald-50/40">
-                <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{fullStartDate}</td>
-                <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">0:00</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F16", backup.readings.start.activeExport)}</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K16", backup.readings.start.reactiveExport)}</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
+              <tr className="bg-slate-50/30">
+                <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{fullStartDate}</td>
+                <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">0:00</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Exp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F16", backup.readings.start.activeExport)}</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Exp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K16", backup.readings.start.reactiveExport)}</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
               </tr>
 
-              <tr className="bg-emerald-50/40">
-                <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F17", backup.readings.start.activeImport)}</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K17", backup.readings.start.reactiveImport)}</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
+              <tr className="bg-slate-50/30">
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Imp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F17", backup.readings.start.activeImport)}</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-slate-50/50">Imp.</td>
+                <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K17", backup.readings.start.reactiveImport)}</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
               </tr>
             </tbody>
           </table>
 
-          {/* Table 1 Net Energy Supplied Summary */}
-          <div className="mt-4 border border-slate-400 text-xs">
-            <div className="flex border-b border-slate-400 bg-slate-50 font-semibold">
-              <div className="w-8 p-1.5 border-r border-slate-400 text-center font-bold">1</div>
-              <div className="flex-1 p-1.5 border-r border-slate-400 font-sans">
+          {/* Table 1 Net Energy Supplied Summary Box */}
+          <div className="mt-4 border border-slate-300 rounded-xl overflow-hidden text-xs shadow-2xs">
+            <div className="flex items-center border-b border-slate-200 bg-slate-50/90 py-2.5 px-3">
+              <div className="w-8 font-bold text-slate-700 text-center">1</div>
+              <div className="flex-1 font-medium text-slate-800">
                 Net Energy Supplied to BPDB (as per Main Meter Reading) for the period ({fullStartDate}) to ({fullEndDate})
               </div>
-              <div className="w-44 p-1.5 border-r border-slate-400 text-right font-bold">
+              <div className="w-48 text-right font-bold text-slate-950 font-mono text-sm">
                 {renderCellWithStatus("I22", calc.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
               </div>
-              <div className="w-16 p-1.5 text-center font-bold">KWH</div>
+              <div className="w-16 text-center font-bold text-slate-600">KWH</div>
             </div>
-            <div className="flex bg-white font-semibold">
-              <div className="w-8 p-1.5 border-r border-slate-400 text-center font-bold">2</div>
-              <div className="flex-1 p-1.5 border-r border-slate-400 font-sans">
+            <div className="flex items-center bg-white py-2.5 px-3">
+              <div className="w-8 font-bold text-slate-700 text-center">2</div>
+              <div className="flex-1 font-medium text-slate-800">
                 Net Energy Supplied to BPDB (as per Back-up Meter Reading) for the period ({fullStartDate}) to ({fullEndDate})
               </div>
-              <div className="w-44 p-1.5 border-r border-slate-400 text-right font-bold">
+              <div className="w-48 text-right font-bold text-slate-950 font-mono text-sm">
                 {renderCellWithStatus("I23", calc.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
               </div>
-              <div className="w-16 p-1.5 text-center font-bold">KWH</div>
+              <div className="w-16 text-center font-bold text-slate-600">KWH</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* =========================================================================
-          BULLETPROOF ZERO-FREEZE CROSS-CHECK HUB (SMOOTH GLIDE & INSTANT SOUND)
+          CROSS-CHECK HUB (CLEAN WHITE LIGHT THEME WITH PARITY ANALYTICS)
          ========================================================================= */}
       {crossCheckReport && (
-        <div className="rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-sm font-sans relative overflow-hidden transition-all">
-          {/* Subtle Ambient Glow */}
+        <div className="rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-sm relative overflow-hidden transition-all">
+          {/* Ambient Glow */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-teal-50/40 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-50/40 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
 
@@ -643,208 +644,210 @@ export function DualMerTables({
           TABLE 2: MANUAL MER SHEET (FROM UPLOADED EXCEL)
          ========================================================= */}
       {manualData && (
-        <div className="border border-purple-300 rounded-2xl bg-white shadow-sm overflow-hidden">
+        <div className="border border-purple-200/90 rounded-2xl bg-white shadow-xs overflow-hidden">
           {/* Table 2 Clean Executive Header */}
-          <div className="bg-gradient-to-r from-purple-50/90 via-white to-slate-50 border-b border-purple-100/80 px-5 py-3.5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-600/20">
-                <FileSpreadsheet className="w-4 h-4" />
+          <div className="bg-gradient-to-r from-purple-50/90 via-white to-slate-50 border-b border-purple-100/80 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-600/20">
+                <FileSpreadsheet className="w-5 h-5" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <h3 className="text-sm font-bold tracking-tight text-slate-900">
                     2. Manual MER Sheet (Extracted from Uploaded File)
                   </h3>
-                  <span className="text-[10px] font-sans font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full border border-purple-200">
-                    MANUAL EXCEL
+                  <span className="text-[10px] font-bold bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full border border-purple-200">
+                    MANUAL WORKBOOK EXCEL
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   Source: <strong className="text-slate-800 font-semibold">{crossCheckReport?.fileName}</strong>
                 </p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-2 text-xs font-sans text-purple-700 bg-purple-50/80 px-3 py-1.5 rounded-xl border border-purple-200 shadow-sm">
+            <div className="hidden sm:flex items-center gap-2 text-xs text-purple-800 bg-purple-50 px-3.5 py-1.5 rounded-xl border border-purple-200/80 shadow-2xs font-medium">
               <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-              <span>Manual Workbook Data</span>
+              <span>Manual Sheet Active</span>
             </div>
           </div>
 
           {/* Table 2 Sheet Content */}
           <div className="p-5 overflow-x-auto">
-            <table className="w-full text-xs border-collapse border border-slate-400 text-slate-900">
+            <table className="w-full text-xs border-collapse border border-slate-300 text-slate-900">
               <thead>
-                <tr className="bg-purple-50 text-slate-900 font-bold">
-                  <th rowSpan={2} className="border border-slate-400 p-2 text-center w-8">Sl</th>
-                  <th rowSpan={2} className="border border-slate-400 p-2 text-center w-36">Meter Location</th>
-                  <th rowSpan={2} className="border border-slate-400 p-2 text-center w-24">Date</th>
-                  <th rowSpan={2} className="border border-slate-400 p-2 text-center w-16">Time</th>
-                  <th colSpan={5} className="border border-slate-400 p-1.5 text-center font-bold bg-purple-50">KWH</th>
-                  <th colSpan={5} className="border border-slate-400 p-1.5 text-center font-bold bg-purple-50">KVARh</th>
-                  <th rowSpan={2} className="border border-slate-400 p-2 text-center w-20">Remarks</th>
+                <tr className="bg-purple-50/80 text-slate-900 font-bold">
+                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-10 text-slate-700">Sl</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-40 text-slate-700">Meter Location</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-28 text-slate-700">Date</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-20 text-slate-700">Time</th>
+                  <th colSpan={5} className="border border-slate-300 p-2 text-center font-bold bg-purple-50/80 text-slate-800">KWH</th>
+                  <th colSpan={5} className="border border-slate-300 p-2 text-center font-bold bg-purple-50/80 text-slate-800">KVARh</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2.5 text-center w-24 text-slate-700">Remarks</th>
                 </tr>
-                <tr className="bg-purple-50/60 text-slate-800 font-semibold text-[11px]">
-                  <th className="border border-slate-400 p-1 text-center w-10"></th>
-                  <th className="border border-slate-400 p-1 text-right">Reading</th>
-                  <th className="border border-slate-400 p-1 text-right">Difference</th>
-                  <th className="border border-slate-400 p-1 text-center">OMF</th>
-                  <th className="border border-slate-400 p-1 text-right font-bold">Total Advance</th>
-                  <th className="border border-slate-400 p-1 text-center w-10"></th>
-                  <th className="border border-slate-400 p-1 text-right">Reading (KVARh)</th>
-                  <th className="border border-slate-400 p-1 text-right">Difference</th>
-                  <th className="border border-slate-400 p-1 text-center">OMF</th>
-                  <th className="border border-slate-400 p-1 text-right font-bold">Total Advance (KVARh)</th>
+                <tr className="bg-purple-50/40 text-slate-800 font-semibold text-[11px]">
+                  <th className="border border-slate-300 p-1.5 text-center w-12 text-slate-500"></th>
+                  <th className="border border-slate-300 p-1.5 text-right">Reading</th>
+                  <th className="border border-slate-300 p-1.5 text-right">Difference</th>
+                  <th className="border border-slate-300 p-1.5 text-center">OMF</th>
+                  <th className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">Total Advance</th>
+                  <th className="border border-slate-300 p-1.5 text-center w-12 text-slate-500"></th>
+                  <th className="border border-slate-300 p-1.5 text-right">Reading (KVARh)</th>
+                  <th className="border border-slate-300 p-1.5 text-right">Difference</th>
+                  <th className="border border-slate-300 p-1.5 text-center">OMF</th>
+                  <th className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">Total Advance (KVARh)</th>
                 </tr>
               </thead>
               <tbody>
-                {/* Plant Control Room Header */}
+                {/* Plant Control Room Header Row */}
                 <tr className="bg-purple-50/30">
-                  <td className="border border-slate-400 p-1.5"></td>
-                  <td colSpan={12} className="border border-slate-400 p-1.5 font-bold text-purple-950">
+                  <td className="border border-slate-300 p-2"></td>
+                  <td colSpan={12} className="border border-slate-300 p-2 font-bold text-purple-950 text-xs">
                     Plant Control Room
                   </td>
-                  <td className="border border-slate-400 p-1.5"></td>
+                  <td className="border border-slate-300 p-2"></td>
                 </tr>
 
                 {/* Main Meter Rows (Manual) */}
                 <tr>
-                  <td rowSpan={4} className="border border-slate-400 p-2 font-bold text-center align-middle">1</td>
-                  <td rowSpan={4} className="border border-slate-400 p-2 font-bold align-middle">
-                    Main Meter<br />
-                    Meter ID:<br />
-                    <span className="font-semibold">{manualData.main.meterId}</span>
+                  <td rowSpan={4} className="border border-slate-300 p-2 font-bold text-center align-middle">1</td>
+                  <td rowSpan={4} className="border border-slate-300 p-2.5 align-middle">
+                    <div className="font-bold text-slate-900 text-xs">Main Meter</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Meter ID: <span className="font-mono font-semibold text-purple-800">{manualData.main.meterId}</span>
+                    </div>
                   </td>
-                  <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{manualData.main.endDate}</td>
-                  <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{manualData.main.endTime}</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F10", manualData.main.endReadings.activeExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("G10", manualData.main.differences.activeExport, true)}</td>
-                  <td rowSpan={4} className="border border-slate-400 p-1 text-center align-middle font-bold">{renderCellWithStatus("H10", manualData.main.omf, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("I10", manualData.main.advances.activeExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K10", manualData.main.endReadings.reactiveExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("L10", manualData.main.differences.reactiveExport, true)}</td>
-                  <td rowSpan={4} className="border border-slate-400 p-1 text-center align-middle font-bold">{renderCellWithStatus("M10", manualData.main.omf, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("N10", manualData.main.advances.reactiveExport, true)}</td>
-                  <td rowSpan={4} className="border border-slate-400 p-2 text-center align-middle text-slate-400">-</td>
+                  <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{manualData.main.endDate}</td>
+                  <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{manualData.main.endTime}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Exp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F10", manualData.main.endReadings.activeExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("G10", manualData.main.differences.activeExport, true)}</td>
+                  <td rowSpan={4} className="border border-slate-300 p-1.5 text-center align-middle font-bold text-slate-800">{renderCellWithStatus("H10", manualData.main.omf, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("I10", manualData.main.advances.activeExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Exp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K10", manualData.main.endReadings.reactiveExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("L10", manualData.main.differences.reactiveExport, true)}</td>
+                  <td rowSpan={4} className="border border-slate-300 p-1.5 text-center align-middle font-bold text-slate-800">{renderCellWithStatus("M10", manualData.main.omf, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("N10", manualData.main.advances.reactiveExport, true)}</td>
+                  <td rowSpan={4} className="border border-slate-300 p-2 text-center align-middle text-slate-400 font-mono">-</td>
                 </tr>
 
                 <tr>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F11", manualData.main.endReadings.activeImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("G11", manualData.main.differences.activeImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("I11", manualData.main.advances.activeImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K11", manualData.main.endReadings.reactiveImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("L11", manualData.main.differences.reactiveImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("N11", manualData.main.advances.reactiveImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F11", manualData.main.endReadings.activeImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("G11", manualData.main.differences.activeImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("I11", manualData.main.advances.activeImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K11", manualData.main.endReadings.reactiveImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("L11", manualData.main.differences.reactiveImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("N11", manualData.main.advances.reactiveImport, true)}</td>
                 </tr>
 
-                <tr className="bg-purple-50/30">
-                  <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{manualData.main.startDate}</td>
-                  <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{manualData.main.startTime}</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F12", manualData.main.startReadings.activeExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K12", manualData.main.startReadings.reactiveExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
+                <tr className="bg-purple-50/20">
+                  <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{manualData.main.startDate}</td>
+                  <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{manualData.main.startTime}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Exp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F12", manualData.main.startReadings.activeExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Exp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K12", manualData.main.startReadings.reactiveExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
                 </tr>
 
-                <tr className="bg-purple-50/30">
-                  <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F13", manualData.main.startReadings.activeImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K13", manualData.main.startReadings.reactiveImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
+                <tr className="bg-purple-50/20">
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F13", manualData.main.startReadings.activeImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K13", manualData.main.startReadings.reactiveImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
                 </tr>
 
                 {/* Back-up Meter Rows (Manual) */}
                 <tr>
-                  <td rowSpan={4} className="border border-slate-400 p-2 font-bold text-center align-middle">2</td>
-                  <td rowSpan={4} className="border border-slate-400 p-2 font-bold align-middle">
-                    Back-up Meter<br />
-                    Meter ID:<br />
-                    <span className="font-semibold">{manualData.backup.meterId}</span>
+                  <td rowSpan={4} className="border border-slate-300 p-2 font-bold text-center align-middle">2</td>
+                  <td rowSpan={4} className="border border-slate-300 p-2.5 align-middle">
+                    <div className="font-bold text-slate-900 text-xs">Back-up Meter</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Meter ID: <span className="font-mono font-semibold text-purple-800">{manualData.backup.meterId}</span>
+                    </div>
                   </td>
-                  <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{manualData.backup.endDate}</td>
-                  <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{manualData.backup.endTime}</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F14", manualData.backup.endReadings.activeExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("G14", manualData.backup.differences.activeExport, true)}</td>
-                  <td rowSpan={4} className="border border-slate-400 p-1 text-center align-middle font-bold">{renderCellWithStatus("H14", manualData.backup.omf, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("I14", manualData.backup.advances.activeExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K14", manualData.backup.endReadings.reactiveExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("L14", manualData.backup.differences.reactiveExport, true)}</td>
-                  <td rowSpan={4} className="border border-slate-400 p-1 text-center align-middle font-bold">{renderCellWithStatus("M14", manualData.backup.omf, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("N14", manualData.backup.advances.reactiveExport, true)}</td>
-                  <td rowSpan={4} className="border border-slate-400 p-2 text-center align-middle text-slate-400">-</td>
+                  <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{manualData.backup.endDate}</td>
+                  <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{manualData.backup.endTime}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Exp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F14", manualData.backup.endReadings.activeExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("G14", manualData.backup.differences.activeExport, true)}</td>
+                  <td rowSpan={4} className="border border-slate-300 p-1.5 text-center align-middle font-bold text-slate-800">{renderCellWithStatus("H14", manualData.backup.omf, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("I14", manualData.backup.advances.activeExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Exp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K14", manualData.backup.endReadings.reactiveExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("L14", manualData.backup.differences.reactiveExport, true)}</td>
+                  <td rowSpan={4} className="border border-slate-300 p-1.5 text-center align-middle font-bold text-slate-800">{renderCellWithStatus("M14", manualData.backup.omf, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("N14", manualData.backup.advances.reactiveExport, true)}</td>
+                  <td rowSpan={4} className="border border-slate-300 p-2 text-center align-middle text-slate-400 font-mono">-</td>
                 </tr>
 
                 <tr>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F15", manualData.backup.endReadings.activeImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("G15", manualData.backup.differences.activeImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("I15", manualData.backup.advances.activeImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K15", manualData.backup.endReadings.reactiveImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("L15", manualData.backup.differences.reactiveImport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-right font-bold">{renderCellWithStatus("N15", manualData.backup.advances.reactiveImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F15", manualData.backup.endReadings.activeImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("G15", manualData.backup.differences.activeImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("I15", manualData.backup.advances.activeImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K15", manualData.backup.endReadings.reactiveImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("L15", manualData.backup.differences.reactiveImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right font-bold text-slate-900">{renderCellWithStatus("N15", manualData.backup.advances.reactiveImport, true)}</td>
                 </tr>
 
-                <tr className="bg-purple-50/30">
-                  <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{manualData.backup.startDate}</td>
-                  <td rowSpan={2} className="border border-slate-400 p-1 text-center align-middle whitespace-nowrap">{manualData.backup.startTime}</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F16", manualData.backup.startReadings.activeExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Exp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K16", manualData.backup.startReadings.reactiveExport, true)}</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
+                <tr className="bg-purple-50/20">
+                  <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{manualData.backup.startDate}</td>
+                  <td rowSpan={2} className="border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap font-medium text-slate-700">{manualData.backup.startTime}</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Exp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F16", manualData.backup.startReadings.activeExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Exp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K16", manualData.backup.startReadings.reactiveExport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
                 </tr>
 
-                <tr className="bg-purple-50/30">
-                  <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("F17", manualData.backup.startReadings.activeImport)}</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center font-bold">Imp.</td>
-                  <td className="border border-slate-400 p-1 text-right">{renderCellWithStatus("K17", manualData.backup.startReadings.reactiveImport)}</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
-                  <td className="border border-slate-400 p-1 text-center text-slate-400">-</td>
+                <tr className="bg-purple-50/20">
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F17", manualData.backup.startReadings.activeImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K17", manualData.backup.startReadings.reactiveImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
+                  <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
                 </tr>
               </tbody>
             </table>
 
-            {/* Table 2 Net Energy Supplied Summary */}
-            <div className="mt-4 border border-slate-400 text-xs">
-              <div className="flex border-b border-slate-400 bg-purple-50/60 font-semibold">
-                <div className="w-8 p-1.5 border-r border-slate-400 text-center font-bold">1</div>
-                <div className="flex-1 p-1.5 border-r border-slate-400 font-sans">
+            {/* Table 2 Net Energy Supplied Summary Box */}
+            <div className="mt-4 border border-purple-200/90 rounded-xl overflow-hidden text-xs shadow-2xs">
+              <div className="flex items-center border-b border-purple-100 bg-purple-50/70 py-2.5 px-3">
+                <div className="w-8 font-bold text-purple-900 text-center">1</div>
+                <div className="flex-1 font-medium text-slate-800">
                   Net Energy Supplied to BPDB (as per Main Meter Reading) for the period ({manualData.main.startDate}) to ({manualData.main.endDate})
                 </div>
-                <div className="w-44 p-1.5 border-r border-slate-400 text-right font-bold">
+                <div className="w-48 text-right font-bold text-purple-950 font-mono text-sm">
                   {renderCellWithStatus("I22", manualData.main.netEnergySupplied, true)}
                 </div>
-                <div className="w-16 p-1.5 text-center font-bold">KWH</div>
+                <div className="w-16 text-center font-bold text-purple-800">KWH</div>
               </div>
-              <div className="flex bg-white font-semibold">
-                <div className="w-8 p-1.5 border-r border-slate-400 text-center font-bold">2</div>
-                <div className="flex-1 p-1.5 border-r border-slate-400 font-sans">
+              <div className="flex items-center bg-white py-2.5 px-3">
+                <div className="w-8 font-bold text-purple-900 text-center">2</div>
+                <div className="flex-1 font-medium text-slate-800">
                   Net Energy Supplied to BPDB (as per Back-up Meter Reading) for the period ({manualData.backup.startDate}) to ({manualData.backup.endDate})
                 </div>
-                <div className="w-44 p-1.5 border-r border-slate-400 text-right font-bold">
+                <div className="w-48 text-right font-bold text-purple-950 font-mono text-sm">
                   {renderCellWithStatus("I23", manualData.backup.netEnergySupplied, true)}
                 </div>
-                <div className="w-16 p-1.5 text-center font-bold">KWH</div>
+                <div className="w-16 text-center font-bold text-purple-800">KWH</div>
               </div>
             </div>
           </div>
