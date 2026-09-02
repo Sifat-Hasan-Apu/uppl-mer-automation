@@ -253,27 +253,41 @@ export function DualMerTables({
         borderClass = isManual ? "border border-purple-200/60" : "border border-emerald-200/60";
         textClass = isManual ? "text-purple-950 font-semibold" : "text-emerald-950 font-semibold";
       } else {
-        bgClass = "bg-rose-100 border-2 border-rose-500 shadow-xs ring-1 ring-rose-300";
-        borderClass = "border-rose-500";
-        textClass = "text-rose-950 font-bold";
+        if (isManual) {
+          // Manual Sheet: Error highlight with cross mark
+          bgClass = "bg-rose-100 border-2 border-rose-500 shadow-xs ring-1 ring-rose-300";
+          borderClass = "border-rose-500";
+          textClass = "text-rose-950 font-bold";
+        } else {
+          // Software MER (Ground-Truth Base): Soft red alert border, NO cross mark
+          bgClass = "bg-rose-50 border-2 border-rose-300/90 shadow-2xs";
+          borderClass = "border-rose-300/90";
+          textClass = "text-rose-950 font-semibold";
+        }
       }
     }
 
     return (
-      <div className={`relative px-2 py-0.5 rounded-md transition-all duration-150 inline-block w-full text-right ${bgClass} ${borderClass} ${textClass}`}>
+      <div
+        className={`relative px-2 py-0.5 rounded-md transition-all duration-150 inline-block w-full text-right ${bgClass} ${borderClass} ${textClass}`}
+        title={
+          !item.isMatch
+            ? isManual
+              ? `Manual Discrepancy: ${item.formattedManual} vs Ground-Truth: ${item.formattedCalculated} (Diff: ${item.delta})`
+              : `Ground-Truth Telemetry Base: ${item.formattedCalculated} (Manual Sheet differs: ${item.formattedManual})`
+            : undefined
+        }
+      >
         <span className="font-mono">{formattedText}</span>
         {isScanned && (
           <span className="inline-block ml-1.5 align-middle">
             {item.isMatch ? (
               <span className="text-emerald-700 font-bold text-[11px]">✓</span>
-            ) : (
-              <span
-                className="text-rose-700 font-extrabold text-xs bg-rose-200/90 border border-rose-400 px-1 py-0.2 rounded"
-                title={`MISMATCH! Ground-Truth Software: ${item.formattedCalculated} | Manual Sheet: ${item.formattedManual} (Delta: ${item.delta})`}
-              >
+            ) : isManual ? (
+              <span className="text-rose-700 font-extrabold text-xs bg-rose-200/90 border border-rose-400 px-1 py-0.2 rounded">
                 ✗
               </span>
-            )}
+            ) : null}
           </span>
         )}
       </div>
