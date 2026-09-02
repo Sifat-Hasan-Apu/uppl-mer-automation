@@ -24,6 +24,37 @@ import {
 } from "../lib/manual-mer-comparator";
 
 // =========================================================================
+// CUSTOM GREEN SQUARE-FRAME CHECKMARK ICON (MATCHING USER'S EXACT REFERENCE)
+// =========================================================================
+export function CustomGreenCheckSquareIcon({ className = "w-8 h-8" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      {/* Rounded Square Frame with open top-right corner */}
+      <path
+        d="M65 24 H30 C20 24 14 30 14 40 V70 C14 80 20 86 30 86 H70 C80 86 86 80 86 70 V48"
+        stroke="currentColor"
+        strokeWidth="7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Checkmark shooting through the top-right opening */}
+      <path
+        d="M32 46 L48 68 L88 28"
+        stroke="currentColor"
+        strokeWidth="8.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// =========================================================================
 // BULLETPROOF WEB AUDIO SYNTHESIZER (INSTANT AUDIO PLAYBACK)
 // =========================================================================
 let globalAudioCtx: AudioContext | null = null;
@@ -536,7 +567,7 @@ export function DualMerTables({
               </div>
             )}
 
-            {/* COMPLETED PARITY REVEAL WITH SMOOTH ARRIVAL & VIBRANT SOUND */}
+            {/* COMPLETED PARITY REVEAL WITH BESPOKE GREEN CHECK-SQUARE ICON */}
             {phase === "COMPLETED" && (
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 animate-in fade-in duration-500">
                 {/* LEFT SIDE: Core Key Value Parity Cards (Cascades in) */}
@@ -603,17 +634,17 @@ export function DualMerTables({
                   </p>
                 </div>
 
-                {/* RIGHT SIDE: Big Landed Hero Verified Badge & Re-Run Button */}
+                {/* RIGHT SIDE: Big Landed Hero Verified Badge with User's Exact Custom Green Check-Square Icon */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 lg:pl-8 lg:border-l border-slate-200 w-full lg:w-auto justify-end shrink-0 animate-in slide-in-from-left duration-700">
-                  {/* Big Hero Verified Seal */}
-                  <div className="flex items-center gap-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/90 px-6 py-4 rounded-3xl shadow-sm">
+                  {/* Big Hero Verified Seal with User's Exact Custom Icon */}
+                  <div className="flex items-center gap-4 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/90 border border-emerald-200/90 px-6 py-4 rounded-3xl shadow-sm">
                     <div className="relative">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 ring-4 ring-emerald-100">
-                        <Check className="w-8 h-8 stroke-[3]" />
+                      <div className="w-14 h-14 rounded-2xl bg-white border border-emerald-300/80 text-emerald-600 flex items-center justify-center shadow-md shadow-emerald-600/15">
+                        <CustomGreenCheckSquareIcon className="w-9 h-9 text-emerald-600" />
                       </div>
-                      <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                      <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
+                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
                       </span>
                     </div>
                     <div>
@@ -816,11 +847,11 @@ export function DualMerTables({
 
                 <tr className="bg-purple-50/20">
                   <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
-                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F17", manualData.backup.startReadings.activeImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("F17", manualData.backup.startReadings.activeImport)}</td>
                   <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
                   <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
                   <td className="border border-slate-300 p-1.5 text-center font-semibold text-slate-600 bg-purple-50/30">Imp.</td>
-                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K17", manualData.backup.startReadings.reactiveImport, true)}</td>
+                  <td className="border border-slate-300 p-1.5 text-right">{renderCellWithStatus("K17", manualData.backup.startReadings.reactiveImport)}</td>
                   <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
                   <td className="border border-slate-300 p-1.5 text-center text-slate-400 font-mono">-</td>
                 </tr>
