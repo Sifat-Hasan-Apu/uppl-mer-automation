@@ -69,8 +69,10 @@ import {
 } from "../lib/manual-mer-comparator";
 import { DualMerTables } from "../components/dual-mer-tables";
 import { AuthGate } from "../components/auth-gate";
+import { DesktopOnlyGate } from "../components/desktop-only-gate";
 
 export default function UPPLMeterDashboard() {
+  const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
   const [config, setConfig] = useState<MeterConfig>(DEFAULT_CONFIG);
@@ -100,6 +102,19 @@ export default function UPPLMeterDashboard() {
   // PWA Install Prompt
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(userAgent);
+      const isNarrow = typeof window !== "undefined" && window.innerWidth < 1024;
+      setIsMobile(isMobileDevice || isNarrow);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     try {
@@ -377,6 +392,10 @@ export default function UPPLMeterDashboard() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  if (isMobile) {
+    return <DesktopOnlyGate />;
+  }
 
   if (isAuthChecking) {
     return (

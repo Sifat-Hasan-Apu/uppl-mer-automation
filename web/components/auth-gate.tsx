@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Lock, Unlock, ShieldCheck, Zap, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { DesktopOnlyGate } from "./desktop-only-gate";
 
 interface AuthGateProps {
   onAuthenticated: () => void;
@@ -33,18 +34,25 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden selection:bg-teal-600 selection:text-white">
-      {/* Subtle modern background glow and grid */}
-      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-teal-100/50 via-emerald-50/30 to-transparent pointer-events-none" />
-      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-teal-400/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-emerald-300/10 rounded-full blur-3xl pointer-events-none" />
+    <>
+      {/* Mobile Screen Blocker */}
+      <div className="lg:hidden fixed inset-0 z-50 overflow-y-auto">
+        <DesktopOnlyGate />
+      </div>
 
-      {/* Main Lock Card (Crisp White Light Theme) */}
-      <div
-        className={`w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 shadow-xl shadow-slate-200/60 relative z-10 transition-all duration-300 ${
-          isShaking ? "ring-2 ring-rose-500 transform translate-x-1" : ""
-        }`}
-      >
+      {/* Desktop Auth Screen */}
+      <div className="hidden lg:flex min-h-screen bg-slate-50 text-slate-900 flex-col justify-center items-center px-4 py-12 relative overflow-hidden selection:bg-teal-600 selection:text-white">
+        {/* Subtle modern background glow and grid */}
+        <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-teal-100/50 via-emerald-50/30 to-transparent pointer-events-none" />
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-teal-400/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-emerald-300/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Main Lock Card (Crisp White Light Theme) */}
+        <div
+          className={`w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 shadow-xl shadow-slate-200/60 relative z-10 transition-all duration-300 ${
+            isShaking ? "ring-2 ring-rose-500 transform translate-x-1" : ""
+          }`}
+        >
         {/* Plant Badge & Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-teal-700 via-teal-600 to-emerald-500 shadow-md shadow-teal-700/20 mb-5 ring-4 ring-teal-50 p-2">
@@ -133,5 +141,6 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
         </div>
       </div>
     </div>
-  );
+  </>
+);
 }
