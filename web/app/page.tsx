@@ -69,7 +69,7 @@ import { DualMerTables } from "../components/dual-mer-tables";
 
 export default function UPPLMeterDashboard() {
   const [config, setConfig] = useState<MeterConfig>(DEFAULT_CONFIG);
-  const [month, setMonth] = useState<string>("2026-08");
+  const [month, setMonth] = useState<string>("");
 
   // File states (Clean initial state for user upload)
   const [mainFile, setMainFile] = useState<File | null>(null);
@@ -314,7 +314,8 @@ export default function UPPLMeterDashboard() {
     URL.revokeObjectURL(url);
   };
 
-  const bounds = monthBounds(auditResult?.month || month);
+  const currentMonthValue = auditResult?.month || month || "2026-08";
+  const bounds = monthBounds(currentMonthValue);
   const monthName = new Intl.DateTimeFormat("en-US", { month: "long", timeZone: "UTC" }).format(bounds.start);
   const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const startDay = String(bounds.start.getUTCDate()).padStart(2, "0");
@@ -499,6 +500,11 @@ export default function UPPLMeterDashboard() {
                   }}
                   className="bg-transparent text-sm font-bold text-teal-800 focus:outline-none cursor-pointer"
                 />
+                {!month && (
+                  <span className="text-[10px] font-bold text-teal-700 bg-teal-100/80 border border-teal-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+                    Auto-Detect ⚡
+                  </span>
+                )}
               </div>
             </div>
           </div>
