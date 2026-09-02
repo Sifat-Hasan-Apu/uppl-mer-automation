@@ -155,9 +155,9 @@ export function parseAndCrossCheckManualMer(
         const val = String(getCellValue(`${c}${r}`) || "").toLowerCase();
         if (val.includes("plant control") || val.includes("main meter")) {
           if (val.includes("plant control")) {
-            baseOffset = r - 9;
+            baseOffset = r - 8;
           } else if (val.includes("main meter")) {
-            baseOffset = r - 10;
+            baseOffset = r - 9;
           }
           break;
         }
@@ -222,56 +222,59 @@ export function parseAndCrossCheckManualMer(
     };
 
     // 1. Overall Multiplication Factor (OMF)
-    checkCell("H", 10, "Main Active OMF", "Plant Parameters", config.omf, "OMF mismatch will scale all active advances incorrectly!");
-    checkCell("M", 10, "Main Reactive OMF", "Plant Parameters", config.omf, "OMF mismatch will scale all reactive advances incorrectly!");
+    checkCell("H", 9, "Main Active OMF", "Plant Parameters", config.omf, "OMF mismatch will scale all active advances incorrectly!");
+    checkCell("M", 9, "Main Reactive OMF", "Plant Parameters", config.omf, "OMF mismatch will scale all reactive advances incorrectly!");
 
     // 2. Main Meter Readings
-    checkCell("F", 10, "Main Active Export End Reading", "Main Meter", main.readings.end.activeExport);
-    checkCell("F", 11, "Main Active Import End Reading", "Main Meter", main.readings.end.activeImport);
-    checkCell("F", 12, "Main Active Export Start Reading", "Main Meter", main.readings.start.activeExport);
-    checkCell("F", 13, "Main Active Import Start Reading", "Main Meter", main.readings.start.activeImport);
+    checkCell("F", 9, "Main Active Export End Reading", "Main Meter", main.readings.end.activeExport);
+    checkCell("F", 10, "Main Active Import End Reading", "Main Meter", main.readings.end.activeImport);
+    checkCell("F", 11, "Main Active Export Start Reading", "Main Meter", main.readings.start.activeExport);
+    checkCell("F", 12, "Main Active Import Start Reading", "Main Meter", main.readings.start.activeImport);
 
-    checkCell("K", 10, "Main Reactive Export End Reading", "Main Meter", main.readings.end.reactiveExport);
-    checkCell("K", 11, "Main Reactive Import End Reading", "Main Meter", main.readings.end.reactiveImport);
-    checkCell("K", 12, "Main Reactive Export Start Reading", "Main Meter", main.readings.start.reactiveExport);
-    checkCell("K", 13, "Main Reactive Import Start Reading", "Main Meter", main.readings.start.reactiveImport);
+    checkCell("K", 9, "Main Reactive Export End Reading", "Main Meter", main.readings.end.reactiveExport);
+    checkCell("K", 10, "Main Reactive Import End Reading", "Main Meter", main.readings.end.reactiveImport);
+    checkCell("K", 11, "Main Reactive Export Start Reading", "Main Meter", main.readings.start.reactiveExport);
+    checkCell("K", 12, "Main Reactive Import Start Reading", "Main Meter", main.readings.start.reactiveImport);
 
     // 3. Main Meter Differences & Advances
-    checkCell("G", 10, "Main Active Export Difference", "Main Meter", mainExpDiff);
-    checkCell("G", 11, "Main Active Import Difference", "Main Meter", mainImpDiff);
-    checkCell("I", 10, "Main Active Export Advance (kWh)", "Main Meter", calc.main.activeExportAdvance);
-    checkCell("I", 11, "Main Active Import Advance (kWh)", "Main Meter", calc.main.activeImportAdvance);
+    checkCell("G", 9, "Main Active Export Difference", "Main Meter", mainExpDiff);
+    checkCell("G", 10, "Main Active Import Difference", "Main Meter", mainImpDiff);
+    checkCell("I", 9, "Main Active Export Advance (kWh)", "Main Meter", calc.main.activeExportAdvance);
+    checkCell("I", 10, "Main Active Import Advance (kWh)", "Main Meter", calc.main.activeImportAdvance);
 
-    checkCell("L", 10, "Main Reactive Export Difference", "Main Meter", mainReacExpDiff);
-    checkCell("L", 11, "Main Reactive Import Difference", "Main Meter", mainReacImpDiff);
-    checkCell("N", 10, "Main Reactive Export Advance (kVARh)", "Main Meter", calc.main.reactiveExportAdvance);
-    checkCell("N", 11, "Main Reactive Import Advance (kVARh)", "Main Meter", calc.main.reactiveImportAdvance);
+    checkCell("L", 9, "Main Reactive Export Difference", "Main Meter", mainReacExpDiff);
+    checkCell("L", 10, "Main Reactive Import Difference", "Main Meter", mainReacImpDiff);
+    checkCell("N", 9, "Main Reactive Export Advance (kVARh)", "Main Meter", calc.main.reactiveExportAdvance);
+    checkCell("N", 10, "Main Reactive Import Advance (kVARh)", "Main Meter", calc.main.reactiveImportAdvance);
 
     // 4. Back-up Meter Readings
-    checkCell("F", 14, "Back-up Active Export End Reading", "Back-up Meter", backup.readings.end.activeExport);
-    checkCell("F", 15, "Back-up Active Import End Reading", "Back-up Meter", backup.readings.end.activeImport);
-    checkCell("F", 16, "Back-up Active Export Start Reading", "Back-up Meter", backup.readings.start.activeExport);
-    checkCell("F", 17, "Back-up Active Import Start Reading", "Back-up Meter", backup.readings.start.activeImport);
+    checkCell("H", 13, "Back-up Active OMF", "Plant Parameters", config.omf);
+    checkCell("M", 13, "Back-up Reactive OMF", "Plant Parameters", config.omf);
 
-    checkCell("K", 14, "Back-up Reactive Export End Reading", "Back-up Meter", backup.readings.end.reactiveExport);
-    checkCell("K", 15, "Back-up Reactive Import End Reading", "Back-up Meter", backup.readings.end.reactiveImport);
-    checkCell("K", 16, "Back-up Reactive Export Start Reading", "Back-up Meter", backup.readings.start.reactiveExport);
-    checkCell("K", 17, "Back-up Reactive Import Start Reading", "Back-up Meter", backup.readings.start.reactiveImport);
+    checkCell("F", 13, "Back-up Active Export End Reading", "Back-up Meter", backup.readings.end.activeExport);
+    checkCell("F", 14, "Back-up Active Import End Reading", "Back-up Meter", backup.readings.end.activeImport);
+    checkCell("F", 15, "Back-up Active Export Start Reading", "Back-up Meter", backup.readings.start.activeExport);
+    checkCell("F", 16, "Back-up Active Import Start Reading", "Back-up Meter", backup.readings.start.activeImport);
+
+    checkCell("K", 13, "Back-up Reactive Export End Reading", "Back-up Meter", backup.readings.end.reactiveExport);
+    checkCell("K", 14, "Back-up Reactive Import End Reading", "Back-up Meter", backup.readings.end.reactiveImport);
+    checkCell("K", 15, "Back-up Reactive Export Start Reading", "Back-up Meter", backup.readings.start.reactiveExport);
+    checkCell("K", 16, "Back-up Reactive Import Start Reading", "Back-up Meter", backup.readings.start.reactiveImport);
 
     // 5. Back-up Meter Differences & Advances
-    checkCell("G", 14, "Back-up Active Export Difference", "Back-up Meter", backupExpDiff);
-    checkCell("G", 15, "Back-up Active Import Difference", "Back-up Meter", backupImpDiff);
-    checkCell("I", 14, "Back-up Active Export Advance (kWh)", "Back-up Meter", calc.backup.activeExportAdvance);
-    checkCell("I", 15, "Back-up Active Import Advance (kWh)", "Back-up Meter", calc.backup.activeImportAdvance);
+    checkCell("G", 13, "Back-up Active Export Difference", "Back-up Meter", backupExpDiff);
+    checkCell("G", 14, "Back-up Active Import Difference", "Back-up Meter", backupImpDiff);
+    checkCell("I", 13, "Back-up Active Export Advance (kWh)", "Back-up Meter", calc.backup.activeExportAdvance);
+    checkCell("I", 14, "Back-up Active Import Advance (kWh)", "Back-up Meter", calc.backup.activeImportAdvance);
 
-    checkCell("L", 14, "Back-up Reactive Export Difference", "Back-up Meter", backupReacExpDiff);
-    checkCell("L", 15, "Back-up Reactive Import Difference", "Back-up Meter", backupReacImpDiff);
-    checkCell("N", 14, "Back-up Reactive Export Advance (kVARh)", "Back-up Meter", calc.backup.reactiveExportAdvance);
-    checkCell("N", 15, "Back-up Reactive Import Advance (kVARh)", "Back-up Meter", calc.backup.reactiveImportAdvance);
+    checkCell("L", 13, "Back-up Reactive Export Difference", "Back-up Meter", backupReacExpDiff);
+    checkCell("L", 14, "Back-up Reactive Import Difference", "Back-up Meter", backupReacImpDiff);
+    checkCell("N", 13, "Back-up Reactive Export Advance (kVARh)", "Back-up Meter", calc.backup.reactiveExportAdvance);
+    checkCell("N", 14, "Back-up Reactive Import Advance (kVARh)", "Back-up Meter", calc.backup.reactiveImportAdvance);
 
     // 6. Summary Net Energy Supplied Rows
-    let mainNetSupplyRow = 22;
-    let backupNetSupplyRow = 23;
+    let mainNetSupplyRow = 21;
+    let backupNetSupplyRow = 22;
     for (let r = 18; r <= 28; r++) {
       const v = String(getCellValue(`B${r}`) || "").toLowerCase();
       if (v.includes("net energy supplied") || v.includes("main meter")) {
@@ -289,69 +292,69 @@ export function parseAndCrossCheckManualMer(
       plantName: String(getCellValue("E2") || getCellValue("F2") || config.plant.name || "M/S.United Payra Power Limited"),
       monthTitle: String(getCellValue("E6") || getCellValue("F6") || `Month : ${audit.month}`),
       main: {
-        meterId: cleanMeterId(getCellValue(cellAt("B", 11)) || getCellValue(cellAt("B", 10)), config.meters.main),
-        endDate: formatExcelDate(getCellValue(cellAt("C", 10)), "31-Jul-26"),
-        endTime: String(getCellValue(cellAt("D", 10)) || "24.00"),
-        startDate: formatExcelDate(getCellValue(cellAt("C", 12)), "01-Jul-26"),
-        startTime: String(getCellValue(cellAt("D", 12)) || "0:00"),
+        meterId: cleanMeterId(getCellValue(cellAt("B", 10)) || getCellValue(cellAt("B", 9)), config.meters.main),
+        endDate: formatExcelDate(getCellValue(cellAt("C", 9)), "31-Jul-26"),
+        endTime: String(getCellValue(cellAt("D", 9)) || "24.00"),
+        startDate: formatExcelDate(getCellValue(cellAt("C", 11)), "01-Jul-26"),
+        startTime: String(getCellValue(cellAt("D", 11)) || "0:00"),
         endReadings: {
-          activeExport: formatValue(getCellValue(cellAt("F", 10))),
-          activeImport: formatValue(getCellValue(cellAt("F", 11))),
-          reactiveExport: formatValue(getCellValue(cellAt("K", 10))),
-          reactiveImport: formatValue(getCellValue(cellAt("K", 11))),
+          activeExport: formatValue(getCellValue(cellAt("F", 9))),
+          activeImport: formatValue(getCellValue(cellAt("F", 10))),
+          reactiveExport: formatValue(getCellValue(cellAt("K", 9))),
+          reactiveImport: formatValue(getCellValue(cellAt("K", 10))),
         },
         startReadings: {
-          activeExport: formatValue(getCellValue(cellAt("F", 12))),
-          activeImport: formatValue(getCellValue(cellAt("F", 13))),
-          reactiveExport: formatValue(getCellValue(cellAt("K", 12))),
-          reactiveImport: formatValue(getCellValue(cellAt("K", 13))),
+          activeExport: formatValue(getCellValue(cellAt("F", 11))),
+          activeImport: formatValue(getCellValue(cellAt("F", 12))),
+          reactiveExport: formatValue(getCellValue(cellAt("K", 11))),
+          reactiveImport: formatValue(getCellValue(cellAt("K", 12))),
         },
         differences: {
-          activeExport: formatValue(getCellValue(cellAt("G", 10))),
-          activeImport: formatValue(getCellValue(cellAt("G", 11))),
-          reactiveExport: formatValue(getCellValue(cellAt("L", 10))),
-          reactiveImport: formatValue(getCellValue(cellAt("L", 11))),
+          activeExport: formatValue(getCellValue(cellAt("G", 9))),
+          activeImport: formatValue(getCellValue(cellAt("G", 10))),
+          reactiveExport: formatValue(getCellValue(cellAt("L", 9))),
+          reactiveImport: formatValue(getCellValue(cellAt("L", 10))),
         },
         advances: {
-          activeExport: formatValue(getCellValue(cellAt("I", 10))),
-          activeImport: formatValue(getCellValue(cellAt("I", 11))),
-          reactiveExport: formatValue(getCellValue(cellAt("N", 10))),
-          reactiveImport: formatValue(getCellValue(cellAt("N", 11))),
+          activeExport: formatValue(getCellValue(cellAt("I", 9))),
+          activeImport: formatValue(getCellValue(cellAt("I", 10))),
+          reactiveExport: formatValue(getCellValue(cellAt("N", 9))),
+          reactiveImport: formatValue(getCellValue(cellAt("N", 10))),
         },
-        omf: formatValue(getCellValue(cellAt("H", 10))),
+        omf: formatValue(getCellValue(cellAt("H", 9))),
         netEnergySupplied: formatValue(getCellValue(cellAt("I", mainNetSupplyRow))),
       },
       backup: {
-        meterId: cleanMeterId(getCellValue(cellAt("B", 15)) || getCellValue(cellAt("B", 14)), config.meters.backup),
-        endDate: formatExcelDate(getCellValue(cellAt("C", 14)), "31-Jul-26"),
-        endTime: String(getCellValue(cellAt("D", 14)) || "24.00"),
-        startDate: formatExcelDate(getCellValue(cellAt("C", 16)), "01-Jul-26"),
-        startTime: String(getCellValue(cellAt("D", 16)) || "0:00"),
+        meterId: cleanMeterId(getCellValue(cellAt("B", 14)) || getCellValue(cellAt("B", 13)), config.meters.backup),
+        endDate: formatExcelDate(getCellValue(cellAt("C", 13)), "31-Jul-26"),
+        endTime: String(getCellValue(cellAt("D", 13)) || "24.00"),
+        startDate: formatExcelDate(getCellValue(cellAt("C", 15)), "01-Jul-26"),
+        startTime: String(getCellValue(cellAt("D", 15)) || "0:00"),
         endReadings: {
-          activeExport: formatValue(getCellValue(cellAt("F", 14))),
-          activeImport: formatValue(getCellValue(cellAt("F", 15))),
-          reactiveExport: formatValue(getCellValue(cellAt("K", 14))),
-          reactiveImport: formatValue(getCellValue(cellAt("K", 15))),
+          activeExport: formatValue(getCellValue(cellAt("F", 13))),
+          activeImport: formatValue(getCellValue(cellAt("F", 14))),
+          reactiveExport: formatValue(getCellValue(cellAt("K", 13))),
+          reactiveImport: formatValue(getCellValue(cellAt("K", 14))),
         },
         startReadings: {
-          activeExport: formatValue(getCellValue(cellAt("F", 16))),
-          activeImport: formatValue(getCellValue(cellAt("F", 17))),
-          reactiveExport: formatValue(getCellValue(cellAt("K", 16))),
-          reactiveImport: formatValue(getCellValue(cellAt("K", 17))),
+          activeExport: formatValue(getCellValue(cellAt("F", 15))),
+          activeImport: formatValue(getCellValue(cellAt("F", 16))),
+          reactiveExport: formatValue(getCellValue(cellAt("K", 15))),
+          reactiveImport: formatValue(getCellValue(cellAt("K", 16))),
         },
         differences: {
-          activeExport: formatValue(getCellValue(cellAt("G", 14))),
-          activeImport: formatValue(getCellValue(cellAt("G", 15))),
-          reactiveExport: formatValue(getCellValue(cellAt("L", 14))),
-          reactiveImport: formatValue(getCellValue(cellAt("L", 15))),
+          activeExport: formatValue(getCellValue(cellAt("G", 13))),
+          activeImport: formatValue(getCellValue(cellAt("G", 14))),
+          reactiveExport: formatValue(getCellValue(cellAt("L", 13))),
+          reactiveImport: formatValue(getCellValue(cellAt("L", 14))),
         },
         advances: {
-          activeExport: formatValue(getCellValue(cellAt("I", 14))),
-          activeImport: formatValue(getCellValue(cellAt("I", 15))),
-          reactiveExport: formatValue(getCellValue(cellAt("N", 14))),
-          reactiveImport: formatValue(getCellValue(cellAt("N", 15))),
+          activeExport: formatValue(getCellValue(cellAt("I", 13))),
+          activeImport: formatValue(getCellValue(cellAt("I", 14))),
+          reactiveExport: formatValue(getCellValue(cellAt("N", 13))),
+          reactiveImport: formatValue(getCellValue(cellAt("N", 14))),
         },
-        omf: formatValue(getCellValue(cellAt("H", 14))),
+        omf: formatValue(getCellValue(cellAt("H", 13))),
         netEnergySupplied: formatValue(getCellValue(cellAt("I", backupNetSupplyRow))),
       },
       cellMap,
