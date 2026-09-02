@@ -65,7 +65,6 @@ import {
   parseAndCrossCheckManualMer,
   ManualMerCrossCheckReport,
 } from "../lib/manual-mer-comparator";
-import { MerCrossCheckModal } from "../components/mer-crosscheck-modal";
 import { DualMerTables } from "../components/dual-mer-tables";
 
 export default function UPPLMeterDashboard() {
@@ -83,7 +82,6 @@ export default function UPPLMeterDashboard() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [crossCheckReport, setCrossCheckReport] = useState<ManualMerCrossCheckReport | null>(null);
-  const [showCrossCheckModal, setShowCrossCheckModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"mer" | "charts" | "audit" | "raw">("mer");
 
   // Filter & Search states
@@ -362,20 +360,6 @@ export default function UPPLMeterDashboard() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {crossCheckReport && (
-            <button
-              onClick={() => setShowCrossCheckModal(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border shadow-sm transition ${
-                crossCheckReport.status === "PERFECT_MATCH"
-                  ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300"
-                  : "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Cross-Check: {crossCheckReport.status === "PERFECT_MATCH" ? "100% MATCH" : `${crossCheckReport.mismatchCount} MISMATCH`}</span>
-            </button>
-          )}
-
           {auditResult && (
             <button
               onClick={handleReset}
@@ -663,7 +647,7 @@ export default function UPPLMeterDashboard() {
                     }`}
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span className="truncate max-w-[130px]" title={manualMerFile.name}>
+                    <span className="truncate max-w-[150px]" title={manualMerFile.name}>
                       {manualMerFile.name}
                     </span>
                     <button
@@ -677,14 +661,6 @@ export default function UPPLMeterDashboard() {
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  {crossCheckReport && (
-                    <button
-                      onClick={() => setShowCrossCheckModal(true)}
-                      className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow transition"
-                    >
-                      View Scanner
-                    </button>
-                  )}
                 </div>
               ) : (
                 <label
@@ -1362,14 +1338,6 @@ export default function UPPLMeterDashboard() {
         </div>
       )}
 
-      {/* Manual MER Cross-Check Interactive Modal */}
-      {crossCheckReport && (
-        <MerCrossCheckModal
-          report={crossCheckReport}
-          isOpen={showCrossCheckModal}
-          onClose={() => setShowCrossCheckModal(false)}
-        />
-      )}
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white px-6 py-4 text-center text-xs text-slate-500 mt-auto">
