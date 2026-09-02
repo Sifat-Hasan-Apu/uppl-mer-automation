@@ -592,99 +592,160 @@ export function DualMerTables({
             )}
 
             {/* COMPLETED PARITY REVEAL WITH BESPOKE GREEN CHECK-SQUARE ICON */}
-            {phase === "COMPLETED" && (
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 animate-in fade-in duration-500">
-                {/* LEFT SIDE: Core Key Value Parity Cards (Cascades in) */}
-                <div className="flex-1 space-y-4 w-full animate-in fade-in slide-in-from-left duration-500">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Cross-Check Parity Analytics
-                    </span>
-                    <span
-                      className={`text-[11px] font-bold uppercase px-3 py-0.5 rounded-full ${
-                        crossCheckReport.status === "PERFECT_MATCH"
-                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                          : "bg-rose-100 text-rose-800 border border-rose-300"
-                      }`}
-                    >
-                      {crossCheckReport.status === "PERFECT_MATCH" ? "100% PARITY CONFIRMED" : `${crossCheckReport.mismatchCount} MISMATCHES DETECTED`}
-                    </span>
-                  </div>
+            {phase === "COMPLETED" && (() => {
+              const mainNetItem = crossCheckReport.items.find((item) => item.label.includes("Main Meter Net Energy"));
+              const backupNetItem = crossCheckReport.items.find((item) => item.label.includes("Back-up Meter Net Energy"));
+              const isAllMatch = crossCheckReport.status === "PERFECT_MATCH";
 
-                  {/* High-Contrast Spacious Value Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Main Meter Net Supply Card */}
-                    <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-4 space-y-2">
-                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                        1. Main Meter Net Supply (Cell I22)
-                      </p>
-                      <div className="flex items-center justify-between font-mono">
-                        <span className="text-base sm:text-lg font-bold text-slate-950">
-                          {calc.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })} KWH
-                        </span>
-                        <span className="text-emerald-700 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5">
-                          <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Exact Parity
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Back-up Meter Net Supply Card */}
-                    <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-4 space-y-2">
-                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                        2. Back-up Meter Net Supply (Cell I23)
-                      </p>
-                      <div className="flex items-center justify-between font-mono">
-                        <span className="text-base sm:text-lg font-bold text-slate-950">
-                          {calc.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })} KWH
-                        </span>
-                        <span className="text-emerald-700 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5">
-                          <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Exact Parity
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Summary Text */}
-                  <p className="text-xs text-slate-600 font-sans leading-relaxed">
-                    {crossCheckReport.status === "PERFECT_MATCH" ? (
-                      <span>
-                        ✓ All <strong className="text-emerald-800 font-bold">36 critical parameter cells</strong> (readings, differences, OMF, advances, and net export) in your manual Excel file match software telemetry with <strong className="text-emerald-800 font-bold">0.000% variance</strong>.
+              return (
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 animate-in fade-in duration-500">
+                  {/* LEFT SIDE: Core Key Value Parity Cards (Cascades in) */}
+                  <div className="flex-1 space-y-4 w-full animate-in fade-in slide-in-from-left duration-500">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Cross-Check Parity Analytics
                       </span>
+                      <span
+                        className={`text-[11px] font-bold uppercase px-3 py-0.5 rounded-full ${
+                          isAllMatch
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                            : "bg-rose-100 text-rose-800 border border-rose-300"
+                        }`}
+                      >
+                        {isAllMatch ? "100% PARITY CONFIRMED" : `${crossCheckReport.mismatchCount} MISMATCHES DETECTED`}
+                      </span>
+                    </div>
+
+                    {/* High-Contrast Spacious Value Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Main Meter Net Supply Card */}
+                      <div
+                        className={`border rounded-2xl p-4 space-y-2 ${
+                          mainNetItem && !mainNetItem.isMatch
+                            ? "bg-rose-50/70 border-rose-300 shadow-2xs"
+                            : "bg-slate-50/90 border-slate-200"
+                        }`}
+                      >
+                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                          1. Main Meter Net Supply ({mainNetItem?.cellRef || "Cell I21"})
+                        </p>
+                        <div className="flex items-center justify-between font-mono">
+                          <span className="text-base sm:text-lg font-bold text-slate-950">
+                            {calc.main.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })} KWH
+                          </span>
+                          {mainNetItem && !mainNetItem.isMatch ? (
+                            <span
+                              className="text-rose-700 font-bold text-xs bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-300 flex items-center gap-1.5"
+                              title={`Manual: ${mainNetItem.formattedManual} vs Ground-Truth: ${mainNetItem.formattedCalculated}`}
+                            >
+                              <span className="font-extrabold text-sm">✗</span> Mismatch (
+                              {mainNetItem.delta && mainNetItem.delta > 0
+                                ? `+${mainNetItem.delta.toFixed(2)}`
+                                : mainNetItem.delta?.toFixed(2)}
+                              )
+                            </span>
+                          ) : (
+                            <span className="text-emerald-700 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5">
+                              <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Exact Parity
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Back-up Meter Net Supply Card */}
+                      <div
+                        className={`border rounded-2xl p-4 space-y-2 ${
+                          backupNetItem && !backupNetItem.isMatch
+                            ? "bg-rose-50/70 border-rose-300 shadow-2xs"
+                            : "bg-slate-50/90 border-slate-200"
+                        }`}
+                      >
+                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                          2. Back-up Meter Net Supply ({backupNetItem?.cellRef || "Cell I22"})
+                        </p>
+                        <div className="flex items-center justify-between font-mono">
+                          <span className="text-base sm:text-lg font-bold text-slate-950">
+                            {calc.backup.activeNetSupply.toLocaleString("en-US", { minimumFractionDigits: 2 })} KWH
+                          </span>
+                          {backupNetItem && !backupNetItem.isMatch ? (
+                            <span
+                              className="text-rose-700 font-bold text-xs bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-300 flex items-center gap-1.5"
+                              title={`Manual: ${backupNetItem.formattedManual} vs Ground-Truth: ${backupNetItem.formattedCalculated}`}
+                            >
+                              <span className="font-extrabold text-sm">✗</span> Mismatch (
+                              {backupNetItem.delta && backupNetItem.delta > 0
+                                ? `+${backupNetItem.delta.toFixed(2)}`
+                                : backupNetItem.delta?.toFixed(2)}
+                              )
+                            </span>
+                          ) : (
+                            <span className="text-emerald-700 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5">
+                              <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Exact Parity
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Summary Text */}
+                    <p className="text-xs text-slate-600 font-sans leading-relaxed">
+                      {isAllMatch ? (
+                        <span>
+                          ✓ All <strong className="text-emerald-800 font-bold">36 critical parameter cells</strong> (readings, differences, OMF, advances, and net export) in your manual Excel file match software telemetry with <strong className="text-emerald-800 font-bold">0.000% variance</strong>.
+                        </span>
+                      ) : (
+                        <span className="text-rose-700 font-semibold">
+                          ⚠️ {crossCheckReport.mismatchCount} cells in manual sheet differ from telemetry data. See root-cause breakdown below.
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* RIGHT SIDE: Dynamic Status Hero Seal */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4 lg:pl-8 lg:border-l border-slate-200 w-full lg:w-auto justify-end shrink-0 animate-in slide-in-from-left duration-700">
+                    {isAllMatch ? (
+                      /* Big Hero Verified Seal with Large Custom Green Icon */
+                      <div className="flex items-center gap-5 bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/90 border border-emerald-300/80 px-7 py-5 rounded-3xl shadow-md shadow-emerald-600/5">
+                        <div className="w-20 h-20 rounded-2xl bg-emerald-50/70 border-2 border-emerald-400 text-emerald-600 p-2 flex items-center justify-center shadow-md shadow-emerald-600/10 shrink-0">
+                          <CustomGreenCheckSquareIcon className="w-16 h-16 text-emerald-600" />
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-base sm:text-lg text-emerald-950 tracking-tight flex items-center gap-2">
+                            100% Ground Truth Parity
+                          </h5>
+                          <p className="text-xs text-emerald-700 font-semibold mt-1">
+                            Verified &amp; Cross-Checked ✓
+                          </p>
+                        </div>
+                      </div>
                     ) : (
-                      <span className="text-rose-700 font-semibold">
-                        ⚠️ {crossCheckReport.mismatchCount} cells in manual sheet differ from telemetry data. See root-cause breakdown below.
-                      </span>
+                      /* Big Hero Discrepancy Alert Seal */
+                      <div className="flex items-center gap-5 bg-gradient-to-r from-rose-50/90 via-white to-rose-50/90 border border-rose-300 px-7 py-5 rounded-3xl shadow-md shadow-rose-600/5">
+                        <div className="w-20 h-20 rounded-2xl bg-rose-100 border-2 border-rose-400 text-rose-600 p-2 flex items-center justify-center shadow-md shadow-rose-600/10 shrink-0">
+                          <AlertTriangle className="w-12 h-12 text-rose-600 stroke-[2.2]" />
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-base sm:text-lg text-rose-950 tracking-tight flex items-center gap-2">
+                            {crossCheckReport.mismatchCount} Discrepancies Found
+                          </h5>
+                          <p className="text-xs text-rose-700 font-semibold mt-1">
+                            Manual Sheet Deviates from Ground Truth ✗
+                          </p>
+                        </div>
+                      </div>
                     )}
-                  </p>
-                </div>
 
-                {/* RIGHT SIDE: Big Landed Hero Verified Badge with User's Exact Custom Green Check-Square Icon */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 lg:pl-8 lg:border-l border-slate-200 w-full lg:w-auto justify-end shrink-0 animate-in slide-in-from-left duration-700">
-                  {/* Big Hero Verified Seal with Large Custom Green Icon */}
-                  <div className="flex items-center gap-5 bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/90 border border-emerald-300/80 px-7 py-5 rounded-3xl shadow-md shadow-emerald-600/5">
-                    <div className="w-20 h-20 rounded-2xl bg-emerald-50/70 border-2 border-emerald-400 text-emerald-600 p-2 flex items-center justify-center shadow-md shadow-emerald-600/10 shrink-0">
-                      <CustomGreenCheckSquareIcon className="w-16 h-16 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-base sm:text-lg text-emerald-950 tracking-tight flex items-center gap-2">
-                        100% Ground Truth Parity
-                      </h5>
-                      <p className="text-xs text-emerald-700 font-semibold mt-1">
-                        Verified &amp; Cross-Checked ✓
-                      </p>
-                    </div>
+                    <button
+                      onClick={handleRunCrossCheck}
+                      className="flex items-center gap-2 px-5 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-bold transition shadow-sm hover:shadow-md cursor-pointer whitespace-nowrap"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>Re-Run Script</span>
+                    </button>
                   </div>
-
-                  <button
-                    onClick={handleRunCrossCheck}
-                    className="flex items-center gap-2 px-5 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-bold transition shadow-sm hover:shadow-md cursor-pointer whitespace-nowrap"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    <span>Re-Run Script</span>
-                  </button>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       )}
