@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ShieldCheck,
   AlertTriangle,
-  CheckCircle2,
-  XCircle,
   Play,
   RotateCcw,
   FastForward,
@@ -13,16 +11,17 @@ import {
   FileSpreadsheet,
   Zap,
   Check,
-  X,
   Cpu,
-  ArrowDown,
-  TrendingDown,
-  TrendingUp,
   RefreshCw,
+  Gauge,
+  ArrowRight,
+  Activity,
+  Layers,
+  Sliders,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { AuditResult, MeterConfig } from "../lib/types";
-import { monthBounds } from "./../lib/meter-engine";
+import { monthBounds } from "../lib/meter-engine";
 import {
   ManualMerCrossCheckReport,
   CellVerificationItem,
@@ -48,7 +47,7 @@ export function DualMerTables({
   const [scanIndex, setScanIndex] = useState<number>(0);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
-  const [speed, setSpeed] = useState<number>(80); // ms per step
+  const [speed, setSpeed] = useState<number>(70); // ms per step
 
   const main = auditResult.meters.main;
   const backup = auditResult.meters.backup;
@@ -61,10 +60,10 @@ export function DualMerTables({
   // Trigger celebration ONLY on complete 100% match after cross-check run
   const triggerCelebration = () => {
     confetti({
-      particleCount: 100,
-      spread: 80,
+      particleCount: 110,
+      spread: 90,
       origin: { y: 0.6 },
-      colors: ["#10b981", "#059669", "#047857", "#34d399", "#fbbf24"],
+      colors: ["#0d9488", "#10b981", "#059669", "#0284c7", "#f59e0b"],
     });
   };
 
@@ -138,27 +137,27 @@ export function DualMerTables({
     let textClass = "";
 
     if (isCurrent) {
-      bgClass = "bg-teal-100 ring-2 ring-teal-500 ring-offset-1 scale-105 transition-all";
+      bgClass = "bg-teal-100 ring-2 ring-teal-600 ring-offset-1 scale-105 transition-all shadow-sm";
       textClass = "text-teal-950 font-bold";
     } else if (isScanned) {
       if (item.isMatch) {
-        bgClass = "bg-emerald-50/80";
+        bgClass = isManual ? "bg-emerald-50/90" : "bg-teal-50/80";
         textClass = "text-emerald-950 font-semibold";
       } else {
-        bgClass = "bg-rose-100 ring-1 ring-rose-400";
+        bgClass = "bg-rose-100/90 ring-1 ring-rose-400";
         textClass = "text-rose-950 font-bold";
       }
     }
 
     return (
-      <div className={`relative px-1 py-0.5 rounded transition-colors duration-150 inline-block w-full text-right ${bgClass} ${borderClass} ${textClass}`}>
+      <div className={`relative px-1 py-0.5 rounded transition-all duration-150 inline-block w-full text-right ${bgClass} ${borderClass} ${textClass}`}>
         <span className="font-mono">{displayValue}</span>
         {isScanned && (
           <span className="inline-block ml-1">
             {item.isMatch ? (
               <span className="text-emerald-700 font-bold text-[10px]">✓</span>
             ) : (
-              <span className="text-rose-700 font-bold text-[10px]" title={`Mismatch: ${item.delta}`}>✗</span>
+              <span className="text-rose-700 font-bold text-[10px]" title={`Mismatch delta: ${item.delta}`}>✗</span>
             )}
           </span>
         )}
@@ -167,6 +166,8 @@ export function DualMerTables({
   };
 
   const currentItem = crossCheckReport?.items[scanIndex] || crossCheckReport?.items[totalCells - 1];
+  const progressPercent = totalCells > 0 ? Math.min(100, Math.round((scanIndex / totalCells) * 100)) : 100;
+  const verifiedCount = hasStarted ? Math.min(scanIndex, totalCells) : 0;
 
   return (
     <div className="space-y-8 font-mono">
@@ -174,24 +175,30 @@ export function DualMerTables({
           TABLE 1: SOFTWARE-GENERATED MER (GROUND TRUTH)
          ========================================================= */}
       <div className="border border-slate-300 rounded-2xl bg-white shadow-sm overflow-hidden">
-        {/* Table 1 Header Bar */}
-        <div className="bg-slate-900 text-white px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-400 border border-teal-500/40 flex items-center justify-center">
+        {/* Table 1 Clean Executive Header */}
+        <div className="bg-gradient-to-r from-teal-50/90 via-white to-slate-50 border-b border-teal-100/80 px-5 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20">
               <Cpu className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-                1. Software-Driven MER (Ground-Truth Telemetry)
-                <span className="text-[10px] font-sans font-bold bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full border border-teal-500/40">
-                  RAW INTERVAL AUDIT
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold tracking-tight text-slate-900">
+                  1. Software-Driven MER (Ground-Truth Telemetry)
+                </h3>
+                <span className="text-[10px] font-sans font-bold bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full border border-teal-200">
+                  TELEMETRY ENGINE
                 </span>
-              </h3>
+              </div>
+              <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+                Calculated directly from {auditResult.meters.main.uniqueTimestampCount} raw 15-minute interval records
+              </p>
             </div>
           </div>
-          <span className="text-xs text-slate-400 font-sans">
-            Calculated from {auditResult.meters.main.uniqueTimestampCount} 15-min Intervals
-          </span>
+          <div className="hidden sm:flex items-center gap-2 text-xs font-sans text-slate-600 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+            <span>Ground Truth Active</span>
+          </div>
         </div>
 
         {/* Table 1 Sheet Content */}
@@ -375,110 +382,168 @@ export function DualMerTables({
       </div>
 
       {/* =========================================================
-          CROSS-CHECK ANIMATION CONTROLLER (BETWEEN TABLES)
+          CREATIVE LIGHT-THEMED CROSS-CHECK HUB & SMART BRIDGE
          ========================================================= */}
       {crossCheckReport && (
-        <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden border border-slate-800 font-sans">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-slate-950 flex items-center justify-center font-bold shadow-lg shadow-teal-500/20">
-                <Zap className={`w-5 h-5 ${isAnimating ? "animate-bounce text-slate-950" : ""}`} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-sm text-white">
-                    Live Cell-by-Cell Cross-Check &amp; Parity Engine
-                  </h4>
-                  {hasStarted && (
-                    <span
-                      className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                        crossCheckReport.status === "PERFECT_MATCH"
-                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                          : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                      }`}
-                    >
-                      {crossCheckReport.status === "PERFECT_MATCH" ? "100% PARITY MATCH" : `${crossCheckReport.mismatchCount} DISCREPANCY`}
-                    </span>
-                  )}
+        <div className="relative rounded-3xl bg-white border-2 border-teal-200/90 p-6 shadow-xl shadow-teal-900/5 font-sans overflow-hidden transition-all">
+          {/* Subtle ambient decorative gradient backdrop */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-teal-100/50 via-emerald-100/30 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-cyan-100/40 via-sky-100/20 to-transparent rounded-full blur-2xl pointer-events-none -ml-20 -mb-20"></div>
+
+          <div className="relative z-10 space-y-5">
+            {/* Top Control Header */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-teal-600/20 ring-4 ring-teal-50">
+                  <Zap className={`w-6 h-6 ${isAnimating ? "animate-pulse" : ""}`} />
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Connecting Table 1 (Software) ➔ Table 2 (Manual Excel: <strong className="text-slate-200">{crossCheckReport.fileName}</strong>)
-                </p>
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h4 className="font-bold text-base text-slate-900 tracking-tight">
+                      Cell-by-Cell CrossCheck Bridge
+                    </h4>
+                    {hasStarted && (
+                      <span
+                        className={`text-[11px] font-bold uppercase px-2.5 py-0.5 rounded-full shadow-sm ${
+                          crossCheckReport.status === "PERFECT_MATCH"
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                            : "bg-rose-100 text-rose-800 border border-rose-300"
+                        }`}
+                      >
+                        {crossCheckReport.status === "PERFECT_MATCH" ? "100% PARITY CONFIRMED" : `${crossCheckReport.mismatchCount} MISMATCHES DETECTED`}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Connecting <strong className="text-teal-700">Table 1 (Telemetry Ground Truth)</strong> ➔ <strong className="text-purple-700">Table 2 ({crossCheckReport.fileName})</strong>
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Animation Controls: Run CrossCheck Python script */}
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={handleRunCrossCheck}
-                disabled={isAnimating}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-teal-700/20 transition cursor-pointer"
-              >
-                {isAnimating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Running CrossCheck Python script...
-                  </>
-                ) : hasStarted ? (
-                  <>
-                    <RotateCcw className="w-4 h-4" />
-                    Re-Run CrossCheck Python script
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 fill-current" />
-                    Run CrossCheck Python script
-                  </>
-                )}
-              </button>
-
-              {isAnimating && (
-                <button
-                  onClick={handleSkip}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition border border-slate-700"
-                >
-                  <FastForward className="w-3.5 h-3.5" />
-                  Instant Complete
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Current Cell Status Bar */}
-          {hasStarted && currentItem && (
-            <div className="mt-4 p-3 rounded-xl bg-slate-800/90 border border-slate-700 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-              <div className="flex items-center gap-2.5">
-                <span className="px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 font-bold border border-teal-500/30">
-                  Cell {currentItem.cellRef}
-                </span>
-                <span className="text-slate-300 font-sans">{currentItem.label}</span>
-              </div>
+              {/* Action Buttons: Run CrossCheck Python Script */}
               <div className="flex items-center gap-3">
-                <span className="text-slate-400">Software: <strong className="text-teal-300">{currentItem.formattedCalculated}</strong></span>
-                <span className="text-slate-500">↔</span>
-                <span className="text-slate-400">Manual: <strong className="text-purple-300">{currentItem.formattedManual}</strong></span>
-                <span
-                  className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                    currentItem.isMatch ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"
-                  }`}
+                <button
+                  onClick={handleRunCrossCheck}
+                  disabled={isAnimating}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 disabled:opacity-50 text-white rounded-2xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-teal-600/20 hover:shadow-xl hover:shadow-teal-600/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
                 >
-                  {currentItem.isMatch ? "MATCH ✓" : "MISMATCH ✗"}
-                </span>
-              </div>
-            </div>
-          )}
+                  {isAnimating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                      <span>Verifying Cells ({verifiedCount}/{totalCells})...</span>
+                    </>
+                  ) : hasStarted ? (
+                    <>
+                      <RotateCcw className="w-4 h-4 text-white" />
+                      <span>Re-Run CrossCheck Python script</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-current text-white" />
+                      <span>Run CrossCheck Python script</span>
+                    </>
+                  )}
+                </button>
 
-          {/* Progress bar */}
-          {hasStarted && (
-            <div className="mt-3">
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
-                <div
-                  className="bg-gradient-to-r from-teal-500 via-emerald-400 to-emerald-300 h-full rounded-full transition-all duration-100"
-                  style={{ width: `${totalCells > 0 ? (scanIndex / totalCells) * 100 : 100}%` }}
-                />
+                {isAnimating && (
+                  <button
+                    onClick={handleSkip}
+                    className="flex items-center gap-1.5 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-semibold transition border border-slate-200 shadow-sm"
+                    title="Skip animation and display full verification results"
+                  >
+                    <FastForward className="w-3.5 h-3.5 text-slate-600" />
+                    <span>Instant</span>
+                  </button>
+                )}
               </div>
             </div>
-          )}
+
+            {/* Smart Metrics & Live Inspector Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+              {/* Card 1: Verified Parity Ratio */}
+              <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
+                  {hasStarted ? `${progressPercent}%` : "0%"}
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Synchronized Cells</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {verifiedCount} / {totalCells} Critical Cells
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 2: Python Script Verification Engine */}
+              <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Engine Protocol</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    BPDB Strict Parity (0.00% Tol.)
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 3: Total Net Difference */}
+              <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Audit Result</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {hasStarted
+                      ? crossCheckReport.status === "PERFECT_MATCH"
+                        ? "100% Exact Parity Verified ✓"
+                        : `${crossCheckReport.mismatchCount} Discrepancies Found`
+                      : "Ready to cross-check"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Current Active Cell Inspector Pill */}
+            {hasStarted && currentItem && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-teal-50/90 via-emerald-50/60 to-purple-50/80 border border-teal-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <span className="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow-xs">
+                    Cell {currentItem.cellRef}
+                  </span>
+                  <span className="text-slate-800 font-sans font-medium text-xs">{currentItem.label}</span>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-slate-600">Software: <strong className="text-teal-800 font-bold">{currentItem.formattedCalculated}</strong></span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-slate-600">Manual: <strong className="text-purple-800 font-bold">{currentItem.formattedManual}</strong></span>
+                  <span
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-xs ${
+                      currentItem.isMatch ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+                    }`}
+                  >
+                    {currentItem.isMatch ? "PARITY MATCH ✓" : `MISMATCH (${currentItem.delta}) ✗`}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Modern Animated Gradient Progress Bar */}
+            {hasStarted && (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-500 font-sans">
+                  <span>Verification Progress</span>
+                  <span>{progressPercent}% Completed</span>
+                </div>
+                <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200 shadow-inner">
+                  <div
+                    className="bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 h-full rounded-full transition-all duration-100 shadow-sm"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -487,24 +552,30 @@ export function DualMerTables({
          ========================================================= */}
       {manualData && (
         <div className="border border-purple-300 rounded-2xl bg-white shadow-sm overflow-hidden">
-          {/* Table 2 Header Bar */}
-          <div className="bg-purple-950 text-white px-5 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center justify-center">
+          {/* Table 2 Clean Executive Header */}
+          <div className="bg-gradient-to-r from-purple-50/90 via-white to-slate-50 border-b border-purple-100/80 px-5 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-600/20">
                 <FileSpreadsheet className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-                  2. Manual MER Sheet (Extracted from Uploaded File)
-                  <span className="text-[10px] font-sans font-bold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/40">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold tracking-tight text-slate-900">
+                    2. Manual MER Sheet (Extracted from Uploaded File)
+                  </h3>
+                  <span className="text-[10px] font-sans font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full border border-purple-200">
                     MANUAL EXCEL
                   </span>
-                </h3>
+                </div>
+                <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+                  Source: <strong className="text-slate-800 font-semibold">{crossCheckReport?.fileName}</strong>
+                </p>
               </div>
             </div>
-            <span className="text-xs text-purple-200 font-sans">
-              Source File: <strong className="text-white">{crossCheckReport?.fileName}</strong>
-            </span>
+            <div className="hidden sm:flex items-center gap-2 text-xs font-sans text-purple-700 bg-purple-50/80 px-3 py-1.5 rounded-xl border border-purple-200 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+              <span>Manual Workbook Data</span>
+            </div>
           </div>
 
           {/* Table 2 Sheet Content */}
@@ -693,17 +764,22 @@ export function DualMerTables({
          ========================================================= */}
       {crossCheckReport && hasStarted && crossCheckReport.mismatchCount > 0 && (
         <div className="border border-rose-300 rounded-2xl bg-white shadow-sm overflow-hidden font-sans">
-          <div className="bg-rose-900 text-white px-5 py-3 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-rose-50 via-white to-rose-50 border-b border-rose-200 px-5 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/20">
                 <AlertTriangle className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-bold tracking-tight">
-                Discrepancy Root-Cause Analytics ({crossCheckReport.mismatchCount} Cells Failed)
-              </h3>
+              <div>
+                <h3 className="text-sm font-bold tracking-tight text-rose-950">
+                  Discrepancy Root-Cause Analytics ({crossCheckReport.mismatchCount} Divergent Cells)
+                </h3>
+                <p className="text-[11px] text-rose-700 mt-0.5">
+                  Differences detected between Manual Spreadsheet and Raw Telemetry Records
+                </p>
+              </div>
             </div>
-            <span className="text-xs text-rose-200">
-              Discrepancies found between Manual Excel and Raw Meter Interval Telemetry
+            <span className="text-xs font-bold text-rose-700 bg-rose-100 px-3 py-1 rounded-full border border-rose-200">
+              Action Required
             </span>
           </div>
 
@@ -721,7 +797,7 @@ export function DualMerTables({
               </thead>
               <tbody>
                 {crossCheckReport.mismatchedItems.map((item) => (
-                  <tr key={item.cellRef} className="border-b border-slate-200 bg-rose-50/60 font-mono">
+                  <tr key={item.cellRef} className="border-b border-slate-200 bg-rose-50/40 font-mono">
                     <td className="p-2.5 text-center font-bold text-rose-950">{item.cellRef}</td>
                     <td className="p-2.5 font-sans font-medium text-slate-800">{item.label}</td>
                     <td className="p-2.5 text-right font-bold text-purple-900">{item.formattedManual}</td>
