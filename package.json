@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "npm --prefix web install && npm --prefix web run build",
+    "web:build": "npm --prefix web run build",
     "generate": "node src/generate.mjs",
     "test": "node test/run-tests.mjs",
-    "web": "npm --prefix web run dev",
-    "web:build": "npm --prefix web run build"
+    "web": "npm --prefix web run dev"
   }
 }
