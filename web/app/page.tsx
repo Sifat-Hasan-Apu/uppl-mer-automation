@@ -379,62 +379,14 @@ export default function UPPLMeterDashboard() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {auditResult && (
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-300 transition shadow-sm"
-              title="Clear current data and upload new files"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-              New Month / Clear
-            </button>
-          )}
-
           <button
             onClick={() => setShowConfigModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-300 transition shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-300 transition shadow-sm cursor-pointer"
             title="Configure OMF, Discrepancy Limits, Meter IDs"
           >
             <Sliders className="w-3.5 h-3.5 text-slate-500" />
             Settings
           </button>
-
-          {isInstallable && (
-            <button
-              onClick={handleInstallClick}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-gradient-to-r from-teal-700 to-emerald-600 hover:from-teal-800 hover:to-emerald-700 text-white rounded-lg shadow-sm transition"
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              Install App
-            </button>
-          )}
-
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
-              auditResult?.status === "VERIFIED"
-                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
-                : errorMessage
-                ? "bg-rose-50 border-rose-300 text-rose-800"
-                : "bg-slate-100 border-slate-200 text-slate-600"
-            }`}
-          >
-            {auditResult?.status === "VERIFIED" ? (
-              <>
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                VERIFIED &amp; AUDITED
-              </>
-            ) : errorMessage ? (
-              <>
-                <AlertCircle className="w-4 h-4 text-rose-600" />
-                VALIDATION BLOCKED
-              </>
-            ) : (
-              <>
-                <Activity className="w-4 h-4 text-slate-500" />
-                WAITING FOR FILES
-              </>
-            )}
-          </div>
         </div>
       </header>
 
